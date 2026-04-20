@@ -95,8 +95,21 @@ export default function MultiplayerArena() {
                   arr.pop();
                   return arr;
               });
+          } else if (data.type === 'RESET') {
+              setBoard(Array(25).fill(null));
+              initLocalDeck(r);
+              setIsMyTurn(r === 'host');
           }
       });
+  };
+
+  const resetMatch = () => {
+      setBoard(Array(25).fill(null));
+      initLocalDeck(role);
+      setIsMyTurn(role === 'host');
+      if (connection) {
+          connection.send({ type: 'RESET' });
+      }
   };
 
   const createRoom = () => {
@@ -183,7 +196,7 @@ export default function MultiplayerArena() {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
       <div className="raid-wrapper raid-horizontal-layout">
-        
+        <button onClick={resetMatch} style={{position: 'absolute', top: '15px', right: '20px', padding: '8px 16px', background: 'transparent', border: '1px solid var(--player-color)', color: 'white', cursor: 'pointer', fontFamily: 'Cinzel', zIndex: 1000}}>Reset Match</button>
         {/* Opponent Flank */}
         <div className="side-column boss-align">
           <div className="slot-container" style={{ opacity: isMyTurn ? 0.5 : 1, display:'flex', flexDirection:'column', alignItems:'center'}}>
