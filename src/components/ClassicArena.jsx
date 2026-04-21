@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Peer from 'peerjs';
 import { loadSaveData } from '../data/MockSaveData';
 import { placeCardOnBoard } from '../engine/BoardLogic';
 import { DndContext, useDraggable, useDroppable, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
-const GRID          = 5;
-const BOARD_SIZE    = GRID * GRID; // 25
-const DECK_TOTAL    = 13;
-const EL_TYPES      = ['💧', '🔥', '🌿', '🪨', '⚡', '✨', '🌑'];
+const GRID       = 3;
+const BOARD_SIZE = 9;
+const HAND_SIZE  = 5;
+const EL_TYPES   = ['💧', '🔥', '🌿', '🪨', '⚡', '✨', '🌑'];
 const SPECIAL_RULES = ['same', 'plus', 'equal'];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ const SPECIAL_RULES = ['same', 'plus', 'equal'];
 function generateElements(rules) {
   const els = Array(BOARD_SIZE).fill(null);
   if (!rules.includes('elemental')) return els;
-  let count = Math.floor(Math.random() * 5) + 4;
+  let count = Math.floor(Math.random() * 3) + 2; // 2–4 tiles
   while (count > 0) {
     const idx = Math.floor(Math.random() * BOARD_SIZE);
     if (!els[idx]) { els[idx] = EL_TYPES[Math.floor(Math.random() * EL_TYPES.length)]; count--; }
@@ -44,7 +44,7 @@ function rulesArrayToConfig(rules) {
 
 const DraggableCard = ({ card, disabled }) => {
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
-    id: `card-${card.id}`,
+    id: `ca-card-${card.id}`,
     data: { card },
     disabled,
   });
@@ -53,25 +53,22 @@ const DraggableCard = ({ card, disabled }) => {
     <div
       ref={setNodeRef} {...listeners} {...attributes}
       className={`tt-card player1 ${isDragging ? 'dragging' : ''}`}
-      style={style}
+      style={{ ...style, width: '100%', height: '100%' }}
     >
       <div className="card-bg" style={{ backgroundImage: `url(${card.image})` }} />
       {card.element && <div className="element-icon">{card.element}</div>}
-      <div className="stats" style={{ fontSize: '30cqw' }}>
+      <div className="stats">
         <span className="t">{card.top}</span>
         <span className="l">{card.left}</span>
         <span className="r">{card.right}</span>
         <span className="b">{card.bottom}</span>
       </div>
-      <div className="name-plate" style={{ fontSize: '20cqw' }}>{card.name}</div>
+      <div className="name-plate">{card.name}</div>
     </div>
   );
 };
 
-/**
- * BUG FIX #1 — perspective-aware coloring:
- * card.owner === myOwner → 'player1' (blue), else → 'opponent' (red)
- */
+/** Perspective-aware cell: card.owner === myOwner → blue, else → red */
 const DroppableCell = ({ id, card, flashClass, element, myOwner }) => {
   const { isOver, setNodeRef } = useDroppable({ id, disabled: !!card });
   const colorClass = card ? (card.owner === myOwner ? 'player1' : 'opponent') : '';
@@ -82,13 +79,13 @@ const DroppableCell = ({ id, card, flashClass, element, myOwner }) => {
         <div key={`${card.id}-${card.owner}`} className={`tt-card ${colorClass} on-board ${flashClass || ''}`}>
           <div className="card-bg" style={{ backgroundImage: `url(${card.image})` }} />
           {card.element && <div className="element-icon">{card.element}</div>}
-          <div className="stats" style={{ fontSize: '30cqw' }}>
+          <div className="stats">
             <span className="t">{card.top}</span>
             <span className="l">{card.left}</span>
             <span className="r">{card.right}</span>
             <span className="b">{card.bottom}</span>
           </div>
-          <div className="name-plate" style={{ fontSize: '20cqw' }}>{card.name}</div>
+          <div className="name-plate">{card.name}</div>
         </div>
       )}
     </div>
@@ -97,7 +94,7 @@ const DroppableCell = ({ id, card, flashClass, element, myOwner }) => {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function MultiplayerArena({
+export default function ClassicArena({
   matchConfig = { basicRules: ['basic'], specialRule: null, infectionRule: null },
   setMatchConfig,
 }) {
@@ -108,24 +105,24 @@ export default function MultiplayerArena({
   const [connection, setConnection] = useState(null);
   const [status,     setStatus]     = useState('lobby');
 
-  const [board,             setBoard]             = useState(Array(BOARD_SIZE).fill(null));
-  const [boardElements,     setBoardElements]     = useState(Array(BOARD_SIZE).fill(null));
-  // BUG FIX #2 — all cards in hand from the start, no hidden deck
-  const [myHand,            setMyHand]            = useState([]);
-  const [opponentHandCount, setOpponentHandCount] = useState(DECK_TOTAL);
-  const [isMyTurn,          setIsMyTurn]          = useState(false);
-  const [role,              setRole]              = useState(null);
-  const [activeDragCard,    setActiveDragCard]    = useState(null);
-  const [flashMap,          setFlashMap]          = useState({});
-  const [rulesLocked,       setRulesLocked]       = useState(false);
-  const [arenaRules,        setArenaRules]        = useState(propsRules);
-  const [gameResult,        setGameResult]        = useState(null);
+  const [board,         setBoard]         = useState(Array(BOARD_SIZE).fill(null));
+  const [boardElements, setBoardElements] = useState(Array(BOARD_SIZE).fill(null));
+  const [myHand,        setMyHand]        = useState([]);
+  const [opponentHand,  setOpponentHand]  = useState(Array(HAND_SIZE).fill({ id: 'h', name: '?' }));
+  const [isMyTurn,      setIsMyTurn]      = useState(false);
+  const [role,          setRole]          = useState(null);
+  const [activeDrag,    setActiveDrag]    = useState(null);
+  const [flashMap,      setFlashMap]      = useState({});
+  const [rulesLocked,   setRulesLocked]   = useState(false);
+  const [arenaRules,    setArenaRules]    = useState(propsRules);
+  const [gameResult,    setGameResult]    = useState(null);
 
   const peerInstance     = useRef(null);
   const roleRef          = useRef(null);
   const arenaRulesRef    = useRef(propsRules);
   const boardElementsRef = useRef(Array(BOARD_SIZE).fill(null));
 
+  // Keep arenaRules synced to prop unless locked to host
   useEffect(() => {
     if (!rulesLocked) {
       setArenaRules(propsRules);
@@ -140,27 +137,31 @@ export default function MultiplayerArena({
   const myScore    = board.filter(c => c?.owner === myOwner).length;
   const theirScore = board.filter(c => c?.owner === theirOwner).length;
 
-  // BUG FIX #2 — build full hand of DECK_TOTAL cards, no separate deck state
-  const initLocalDeck = (r) => {
+  const initHands = (r) => {
     const data     = loadSaveData();
     const baseDeck = r === 'host' ? data.playerDeck : data.opponentDeck;
     const owner    = getMyOwner(r);
-    const fullHand = [];
-    for (let i = 0; i < DECK_TOTAL; i++) {
-      fullHand.push({ ...baseDeck[i % baseDeck.length], id: `${r}_${i}`, owner });
+    const hand     = [];
+    for (let i = 0; i < HAND_SIZE; i++) {
+      hand.push({ ...baseDeck[i % baseDeck.length], id: `${r}_${i}`, owner });
     }
-    setMyHand(fullHand);              // all 13 visible at once
-    setOpponentHandCount(DECK_TOTAL); // show 13 face-down cards for opponent
+    setMyHand(hand);
+    setOpponentHand(Array(HAND_SIZE).fill({
+      id: 'hidden',
+      owner: r === 'host' ? 'player2' : 'player1',
+      name: '?',
+    }));
     setGameResult(null);
   };
 
+  // ── PeerJS bootstrap ──
   const handleConnection = (conn, r) => {
     roleRef.current = r;
     setRole(r);
     setConnection(conn);
     setStatus('connected');
     setIsMyTurn(r === 'host');
-    initLocalDeck(r);
+    initHands(r);
 
     if (r === 'host') {
       conn.on('open', () => {
@@ -196,7 +197,8 @@ export default function MultiplayerArena({
           setTimeout(() => setFlashMap({}), 750);
         }
         setBoard(data.board);
-        setOpponentHandCount(prev => Math.max(0, prev - 1));
+        // Remove one face-down card from opponent hand
+        setOpponentHand(prev => prev.length > 0 ? prev.slice(0, -1) : prev);
         setIsMyTurn(true);
         const result = evalResult(data.board, getMyOwner(roleRef.current));
         if (result) setGameResult(result);
@@ -207,23 +209,12 @@ export default function MultiplayerArena({
           setBoardElements(data.boardElements);
           boardElementsRef.current = data.boardElements;
         }
-        initLocalDeck(roleRef.current);
+        initHands(roleRef.current);
         setIsMyTurn(roleRef.current === 'host');
         setFlashMap({});
         setGameResult(null);
       }
     });
-  };
-
-  const resetMatch = () => {
-    const elements = role === 'host' ? generateElements(arenaRulesRef.current) : boardElementsRef.current;
-    if (role === 'host') { setBoardElements(elements); boardElementsRef.current = elements; }
-    setBoard(Array(BOARD_SIZE).fill(null));
-    setFlashMap({});
-    setGameResult(null);
-    initLocalDeck(role);
-    setIsMyTurn(role === 'host');
-    if (connection) connection.send({ type: 'RESET', boardElements: elements });
   };
 
   const createRoom = () => {
@@ -243,12 +234,23 @@ export default function MultiplayerArena({
     peerInstance.current = peer;
   };
 
-  // BUG FIX #2 — no deck refill; just remove the played card from the full hand
-  const executeMove = (placedCard, targetIndex) => {
-    setMyHand(prev => prev.filter(c => c.id !== placedCard.id));
+  const resetMatch = () => {
+    const elements = role === 'host' ? generateElements(arenaRulesRef.current) : boardElementsRef.current;
+    if (role === 'host') { setBoardElements(elements); boardElementsRef.current = elements; }
+    setBoard(Array(BOARD_SIZE).fill(null));
+    setFlashMap({});
+    setGameResult(null);
+    initHands(role);
+    setIsMyTurn(role === 'host');
+    if (connection) connection.send({ type: 'RESET', boardElements: elements });
+  };
+
+  // ── Move execution ──
+  const executeMove = (card, position) => {
+    setMyHand(prev => prev.filter(c => c.id !== card.id));
 
     const { newBoard, capturedBy } = placeCardOnBoard(
-      board, placedCard, targetIndex, GRID, arenaRules, boardElementsRef.current
+      board, card, position, GRID, arenaRules, boardElementsRef.current
     );
 
     const toFlash = {};
@@ -276,11 +278,11 @@ export default function MultiplayerArena({
     }
   };
 
-  const handleDragStart = e => setActiveDragCard(e.active.data.current?.card);
+  const handleDragStart = e => setActiveDrag(e.active.data.current?.card);
   const handleDragEnd   = e => {
-    setActiveDragCard(null);
+    setActiveDrag(null);
     if (gameResult || !e.over || !e.active.data.current?.card || !isMyTurn) return;
-    const idx = parseInt(e.over.id.replace('net-cell-', ''), 10);
+    const idx = parseInt(e.over.id.replace('ca-cell-', ''), 10);
     if (!isNaN(idx) && !board[idx]) executeMove(e.active.data.current.card, idx);
   };
 
@@ -297,27 +299,42 @@ export default function MultiplayerArena({
     return (
       <div className="spire-wrapper" style={{ flexDirection: 'column', gap: '40px' }}>
         <h1 style={{ fontSize: 'clamp(1.6rem, 5vw, 3rem)', textShadow: '0 0 10px var(--player-color)' }}>
-          MULTIPLAYER ARENA [5×5]
+          CLASSIC ARENA [3×3]
         </h1>
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button className="mode-toggle-btn active" onClick={createRoom} style={{ padding: '14px 28px', fontSize: '1.1rem', cursor: 'pointer' }}>
+          <button
+            className="mode-toggle-btn active"
+            onClick={createRoom}
+            style={{ padding: '14px 28px', fontSize: '1.1rem', cursor: 'pointer' }}
+          >
             HOST MATCH
           </button>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <input type="text" placeholder="Enter Host Code" value={targetId} onChange={e => setTargetId(e.target.value)}
-              style={{ padding: '10px', background: 'transparent', color: 'white', border: '1px solid var(--player-color)', textAlign: 'center', fontFamily: 'Cinzel' }} />
-            <button className="mode-toggle-btn active" onClick={joinRoom} style={{ padding: '10px', cursor: 'pointer' }}>
+            <input
+              type="text"
+              placeholder="Enter Host Code"
+              value={targetId}
+              onChange={e => setTargetId(e.target.value)}
+              style={{ padding: '10px', background: 'transparent', color: 'white', border: '1px solid var(--player-color)', textAlign: 'center', fontFamily: 'Cinzel' }}
+            />
+            <button
+              className="mode-toggle-btn active"
+              onClick={joinRoom}
+              style={{ padding: '10px', cursor: 'pointer' }}
+            >
               JOIN MATCH
             </button>
           </div>
         </div>
-        {rulesLocked && <div style={{ color: 'var(--player-color)', fontSize: '0.85rem' }}>Rules locked to host's selection</div>}
+        {rulesLocked && (
+          <div style={{ color: 'var(--player-color)', fontSize: '0.85rem' }}>Rules locked to host's selection</div>
+        )}
       </div>
     );
   }
 
   // ════════════════════════════════════════════════════════════════
-  // WAITING
+  // WAITING ROOM
   // ════════════════════════════════════════════════════════════════
   if (status === 'waiting') {
     return (
@@ -327,19 +344,20 @@ export default function MultiplayerArena({
           {peerId || 'Generating...'}
         </div>
         <p>Send this code to your opponent.</p>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Active rules will be sent to them on connect.</p>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Active rules will be synced on connect.</p>
       </div>
     );
   }
 
   // ════════════════════════════════════════════════════════════════
-  // ACTIVE GAME
+  // ACTIVE GAME  — reuses the same .spire-wrapper / .game-row CSS
+  // as GameBoard, so it's already mobile-responsive
   // ════════════════════════════════════════════════════════════════
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
-      <div className="raid-wrapper raid-horizontal-layout">
+      <div className="spire-wrapper">
 
-        {/* Game-over overlay */}
+        {/* Win/Draw/Lose overlay */}
         {gameResult && (
           <div className={`win-banner ${resultCfg[gameResult].cls}`} style={{ zIndex: 200 }}>
             <div className="banner-title">{resultCfg[gameResult].label}</div>
@@ -348,66 +366,63 @@ export default function MultiplayerArena({
           </div>
         )}
 
-        <button onClick={resetMatch} style={{ position: 'absolute', top: '15px', right: '20px', padding: '8px 16px', background: 'transparent', border: '1px solid var(--player-color)', color: 'white', cursor: 'pointer', fontFamily: 'Cinzel', zIndex: 1000 }}>
+        {/* Reset button */}
+        <button
+          onClick={resetMatch}
+          style={{ position: 'absolute', top: '12px', right: '16px', padding: '6px 14px', background: 'transparent', border: '1px solid var(--player-color)', color: 'white', cursor: 'pointer', fontFamily: 'Cinzel', fontSize: '0.7rem', zIndex: 10 }}
+        >
           Reset
         </button>
-        {rulesLocked && (
-          <div style={{ position: 'absolute', top: '15px', left: '50%', transform: 'translateX(-50%)', color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', fontFamily: 'Cinzel', zIndex: 1000 }}>
-            Rules synced from host
-          </div>
-        )}
 
-        {/* ── Opponent Flank ── */}
-        <div className="side-column boss-align">
-          <div style={{ color: 'var(--opponent-color)', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '8px', textAlign: 'center' }}>
-            {isMyTurn ? 'WAITING' : "OPP TURN"}
-          </div>
-          <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', marginBottom: '8px', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
-            Cards: {opponentHandCount}
-          </div>
-          {/* Show up to 5 face-down stacked cards as visual indicator */}
-          <div className="mini-hand boss-stack" style={{ flexDirection: 'column', overflowY: 'auto', maxHeight: 'calc(100svh - var(--header-h) - 120px)' }}>
-            {Array(Math.min(opponentHandCount, 5)).fill(0).map((_, i) => (
-              <div key={i} className="tt-card opponent hidden-card" style={{ width: 'clamp(42px, 5vw, 60px)', height: 'calc(clamp(42px, 5vw, 60px) * 1.5)' }}>?</div>
+        {/* ── Three-column layout: opponent | board | player ── */}
+        <div className="game-row">
+
+          {/* Opponent hand — face down */}
+          <div className="opponent-column">
+            <div style={{ color: 'var(--opponent-color)', fontSize: '0.6rem', fontFamily: 'Cinzel', marginBottom: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+              {isMyTurn ? 'WAITING' : "OPP TURN"}
+            </div>
+            {opponentHand.map((_, i) => (
+              <div key={i} className="hand-card-slot">
+                <div className="tt-card opponent hidden-card" style={{ width: '100%', height: '100%' }}>?</div>
+              </div>
             ))}
           </div>
-        </div>
 
-        {/* ── Center: board + score ── */}
-        <div className="board-container raid-board-container">
-          <div className="score-row" style={{ marginBottom: '8px' }}>
-            <span className="score-player">{myScore}</span>
-            <span className="score-sep">—</span>
-            <span className="score-opp">{theirScore}</span>
-            <span className="turn-label">{isMyTurn ? 'Your Turn' : 'Opponent…'}</span>
+          {/* Board + score */}
+          <div className="board-area">
+            <div className="score-row">
+              <span className="score-player">{myScore}</span>
+              <span className="score-sep">—</span>
+              <span className="score-opp">{theirScore}</span>
+              <span className="turn-label">{isMyTurn ? 'Your Turn' : 'Opponent…'}</span>
+            </div>
+            <div className="board grid-3x3">
+              {board.map((c, i) => (
+                <DroppableCell
+                  key={`ca-cell-${i}`}
+                  id={`ca-cell-${i}`}
+                  card={c}
+                  element={boardElements[i]}
+                  flashClass={flashMap[i] ? `captured-${flashMap[i]}` : ''}
+                  myOwner={myOwner}
+                />
+              ))}
+            </div>
+            {rulesLocked && (
+              <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.6rem', fontFamily: 'Cinzel', marginTop: '4px' }}>
+                rules synced from host
+              </div>
+            )}
           </div>
-          {/* BUG FIX #3 — grid-5x5 keeps aspect-ratio: 2/3 via CSS; no inline override */}
-          <div className="board grid-5x5">
-            {board.map((c, i) => (
-              <DroppableCell
-                key={`net-cell-${i}`}
-                id={`net-cell-${i}`}
-                card={c}
-                element={boardElements[i]}
-                flashClass={flashMap[i] ? `captured-${flashMap[i]}` : ''}
-                myOwner={myOwner}
-              />
-            ))}
-          </div>
-        </div>
 
-        {/* ── Player Flank — all cards always visible ── */}
-        <div className="side-column player-align">
-          <div style={{ color: 'var(--player-color)', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '8px', textAlign: 'center' }}>
-            {isMyTurn ? 'YOUR TURN' : 'PLEASE WAIT'}
-          </div>
-          <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', marginBottom: '8px', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
-            Hand: {myHand.length}
-          </div>
-          {/* BUG FIX #2 — scrollable column showing ALL remaining cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', overflowY: 'auto', maxHeight: 'calc(100svh - var(--header-h) - 120px)' }}>
+          {/* Player hand */}
+          <div className="player-column">
+            <div style={{ color: 'var(--player-color)', fontSize: '0.6rem', fontFamily: 'Cinzel', marginBottom: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+              {isMyTurn ? 'YOUR TURN' : 'PLEASE WAIT'}
+            </div>
             {myHand.map(c => (
-              <div key={c.id} style={{ width: 'clamp(42px, 5vw, 60px)', height: 'calc(clamp(42px, 5vw, 60px) * 1.5)', flexShrink: 0 }}>
+              <div key={c.id} className="hand-card-slot">
                 <DraggableCard card={c} disabled={!isMyTurn || !!gameResult} />
               </div>
             ))}
@@ -416,17 +431,17 @@ export default function MultiplayerArena({
 
         {/* Drag ghost */}
         <DragOverlay dropAnimation={null}>
-          {activeDragCard && (
-            <div className="tt-card player1" style={{ width: 'clamp(42px, 5vw, 60px)', height: 'calc(clamp(42px, 5vw, 60px) * 1.5)' }}>
-              <div className="card-bg" style={{ backgroundImage: `url(${activeDragCard.image})` }} />
-              {activeDragCard.element && <div className="element-icon">{activeDragCard.element}</div>}
-              <div className="stats" style={{ fontSize: '30cqw' }}>
-                <span className="t">{activeDragCard.top}</span>
-                <span className="l">{activeDragCard.left}</span>
-                <span className="r">{activeDragCard.right}</span>
-                <span className="b">{activeDragCard.bottom}</span>
+          {activeDrag && (
+            <div className="tt-card player1" style={{ width: 'var(--card-w)', height: 'var(--card-h)' }}>
+              <div className="card-bg" style={{ backgroundImage: `url(${activeDrag.image})` }} />
+              {activeDrag.element && <div className="element-icon">{activeDrag.element}</div>}
+              <div className="stats">
+                <span className="t">{activeDrag.top}</span>
+                <span className="l">{activeDrag.left}</span>
+                <span className="r">{activeDrag.right}</span>
+                <span className="b">{activeDrag.bottom}</span>
               </div>
-              <div className="name-plate" style={{ fontSize: '20cqw' }}>{activeDragCard.name}</div>
+              <div className="name-plate">{activeDrag.name}</div>
             </div>
           )}
         </DragOverlay>

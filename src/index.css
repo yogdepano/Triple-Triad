@@ -664,45 +664,38 @@ body {
     padding: 10px;
   }
 
-  /* ── Raid / 5×5 Arena: vertical stack ── */
+  /* ── Raid / 5×5 Arena: keep horizontal, tighten gap ── */
   .raid-wrapper {
-    flex-direction: column;
-    height: auto;
-    min-height: calc(100svh - var(--header-h));
-    gap: 12px;
-    padding: 12px 8px;
-    overflow-y: auto;
+    gap: 8px;
+    padding: 8px 4px;
+    overflow-x: auto;
   }
 
   .raid-board-container {
-    max-width: 100%;
-    width: 100%;
-    order: 1; /* board first */
+    max-width: none;
   }
 
+  /* BUG FIX #3 — keep portrait card aspect ratio (2/3), constrain by height */
   .board.grid-5x5 {
-    height: auto;
-    width: 90vw;
-    aspect-ratio: 1; /* square on mobile — more finger-friendly */
-    gap: 4px;
-    padding: 8px;
-  }
-
-  .board.grid-7x7 {
-    height: auto;
-    width: 90vw;
-    aspect-ratio: 1;
-    gap: 2px;
+    /* height driven by available screen; width follows aspect-ratio: 2/3 */
+    height: calc(100svh - var(--header-h) - 30px);
+    width: auto;
+    /* aspect-ratio: 2/3 is inherited from the base rule — do NOT override */
+    gap: 3px;
     padding: 6px;
   }
 
-  /* Side columns go horizontal under/above board */
+  .board.grid-7x7 {
+    height: calc(100svh - var(--header-h) - 30px);
+    width: auto;
+    gap: 2px;
+    padding: 4px;
+  }
+
+  /* Side columns stay vertical but shrink */
   .side-column {
-    flex-direction: row;
-    gap: 12px;
-    order: 2;
-    width: 100%;
-    justify-content: space-around;
+    gap: 6px;
+    min-width: 0;
   }
 
   .mini-hand {
