@@ -267,7 +267,7 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
       setOpponentHand(customOpponentHand);
     } else if (enemyDeck) {
       // Adventure Mode: use the hand the player picked in DeckPicker
-      const oHand = enemyDeck.map((c, i) => ({ ...c, id: `adv_o_${i}_${Date.now()}`, owner: 'opponent' }));
+      const oHand = enemyDeck.map((c, i) => ({ ...c, id: `o_${i}_${Date.now()}`, owner: 'opponent' }));
       let pRaw;
       if (initialPlayerHand && initialPlayerHand.length > 0) {
         pRaw = initialPlayerHand;
@@ -275,7 +275,7 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
         const pPool = data.playerDeck.filter(c => !c.isAvatar);
         pRaw = (isRandom ? [...pPool].sort(() => 0.5 - Math.random()) : pPool).slice(0, 5);
       }
-      setPlayerHand(pRaw.map((c, i) => ({ ...c, id: `adv_p_${i}_${Date.now()}`, owner: 'player' })));
+      setPlayerHand(pRaw.map((c, i) => ({ ...c, id: `p_${i}_${Date.now()}`, owner: 'player' })));
       setOpponentHand(oHand);
     } else {
       // Restore Avatars to respective owners for testing
