@@ -750,7 +750,7 @@ body {
 .adv-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100svh - var(--header-h));
   background: radial-gradient(ellipse at 30% 20%, #1e0a2e 0%, #0b0710 80%);
   overflow: hidden;
   position: relative;
@@ -842,7 +842,7 @@ body {
 ═══════════════════════════════════════════════ */
 .deck-picker-wrapper {
   display: flex; flex-direction: column; align-items: center;
-  height: 100%; padding: 24px 20px; gap: 14px;
+  height: calc(100svh - var(--header-h)); padding: 24px 20px; gap: 14px;
   overflow-y: auto;
   background: radial-gradient(ellipse at center, #1a1025 0%, var(--bg-dark) 100%);
 }
@@ -874,7 +874,7 @@ body {
 /* ═══════════════════════════════════════════════
    ENCOUNTER OVERLAY
 ═══════════════════════════════════════════════ */
-.encounter-overlay { display: flex; flex-direction: column; align-items: center; height: 100%; overflow-y: auto; background: radial-gradient(ellipse at center, #1a1025 0%, var(--bg-dark) 100%); }
+.encounter-overlay { display: flex; flex-direction: column; align-items: center; height: calc(100svh - var(--header-h)); overflow-y: auto; background: radial-gradient(ellipse at center, #1a1025 0%, var(--bg-dark) 100%); }
 .encounter-rules-banner { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(5,3,10,0.85); border-bottom: 1px solid var(--glass-border); width: 100%; flex-wrap: wrap; }
 .encounter-rules-label  { font-family: 'Cinzel', serif; font-size: 0.6rem; color: rgba(255,255,255,0.3); letter-spacing: 2px; margin-right: 6px; }
 .encounter-enemy-preview { padding: 16px 0 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; }

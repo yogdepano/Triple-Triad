@@ -162,24 +162,26 @@ export default function AdventureMap() {
       <div className="adv-map-canvas">
         {/* SVG connector lines */}
         <svg className="adv-svg-layer" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {Object.values(nodes).map(n =>
-            n.connections.map(targetId => {
-              const target = nodes[targetId];
-              if (!target) return null;
-              const x1 = n.x * 100;
-              const y1 = (1 - n.row / (TOTAL_ROWS - 1)) * 92 + 4;
-              const x2 = target.x * 100;
-              const y2 = (1 - target.row / (TOTAL_ROWS - 1)) * 92 + 4;
-              const isActive = n.completed || n.available;
-              return (
-                <line
-                  key={`${n.id}-${targetId}`}
-                  x1={x1} y1={y1} x2={x2} y2={y2}
-                  className={`adv-path ${isActive ? 'path-active' : 'path-locked'}`}
-                />
-              );
-            })
-          )}
+          {Object.values(nodes).map(n => (
+            <React.Fragment key={n.id}>
+              {n.connections.map(targetId => {
+                const target = nodes[targetId];
+                if (!target) return null;
+                const x1 = n.x * 100;
+                const y1 = (1 - n.row / (TOTAL_ROWS - 1)) * 92 + 4;
+                const x2 = target.x * 100;
+                const y2 = (1 - target.row / (TOTAL_ROWS - 1)) * 92 + 4;
+                const isActive = n.completed || n.available;
+                return (
+                  <line
+                    key={`${n.id}-${targetId}`}
+                    x1={x1} y1={y1} x2={x2} y2={y2}
+                    className={`adv-path ${isActive ? 'path-active' : 'path-locked'}`}
+                  />
+                );
+              })}
+            </React.Fragment>
+          ))}
         </svg>
 
         {/* Nodes */}
