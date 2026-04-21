@@ -759,10 +759,10 @@ body {
 .adv-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 10px 20px;
-  background: rgba(5,3,10,0.85);
-  border-bottom: 1px solid var(--glass-border);
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(18, 10, 28, 0.98);
+  border-bottom: 1px solid rgba(255,255,255,0.14);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -783,31 +783,41 @@ body {
 .adv-rule-chip.boss-chip { border-color: rgba(255,140,0,0.5); color: #ff8c00; }
 
 /* ── Header action buttons ── */
-.adv-reset-run-btn, .adv-reset-all-btn {
+.adv-new-run-btn, .adv-reset-run-btn, .adv-reset-all-btn {
   font-family: 'Cinzel', serif;
   font-size: 0.62rem;
   letter-spacing: 1px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 }
+.adv-new-run-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.7);
+  margin-left: auto;  /* push all 3 buttons to the right */
+}
+.adv-new-run-btn:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.5);
+  color: #fff;
+}
 .adv-reset-run-btn {
   background: transparent;
-  border: 1px solid rgba(74,144,226,0.3);
-  color: rgba(74,144,226,0.7);
-  margin-left: auto;
+  border: 1px solid rgba(74,144,226,0.4);
+  color: rgba(74,144,226,0.85);
 }
 .adv-reset-run-btn:hover {
-  background: rgba(74,144,226,0.1);
+  background: rgba(74,144,226,0.12);
   border-color: var(--player-color);
   color: #fff;
 }
 .adv-reset-all-btn {
   background: transparent;
-  border: 1px solid rgba(226,74,74,0.3);
-  color: rgba(226,74,74,0.6);
+  border: 1px solid rgba(226,74,74,0.4);
+  color: rgba(226,74,74,0.75);
 }
 .adv-reset-all-btn:hover {
   background: rgba(226,74,74,0.12);

@@ -167,8 +167,8 @@ export default function AdventureMap() {
           {MAP_RULES.map(r => <span key={r} className="adv-rule-chip">{r}</span>)}
           <span className="adv-rule-chip boss-chip">Boss: {BOSS_EXTRA_RULE}</span>
         </div>
-        <button className="reset-btn" onClick={startRun} title="Generate a new map (keeps your cards)">
-          New Run
+        <button className="adv-new-run-btn" onClick={startRun} title="Generate a new map (keeps your cards)">
+          ↺ New Run
         </button>
         <button className="adv-reset-run-btn" onClick={handleResetRun} title="Go back to ACT I screen">
           ↩ Reset Run
