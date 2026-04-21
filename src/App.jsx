@@ -3,6 +3,7 @@ import GameBoard from './components/GameBoard'
 import ClassicArena from './components/ClassicArena'
 import WorldBossRaid from './components/WorldBossRaid'
 import MultiplayerArena from './components/MultiplayerArena'
+import AdventureMap from './components/AdventureMap'
 
 const ALL_RULES = [
   { value: 'basic',       label: 'Basic' },
@@ -96,6 +97,7 @@ function App() {
           <button className={currentMode === 'classic_online' ? 'active' : ''} onClick={() => switchMode('classic_online')}>3×3 ⚔</button>
           <button className={currentMode === 'multiplayer'    ? 'active' : ''} onClick={() => switchMode('multiplayer')}>5×5</button>
           <button className={currentMode === 'raid'           ? 'active' : ''} onClick={() => switchMode('raid')}>Raid</button>
+          <button className={currentMode === 'adventure'      ? 'active' : ''} onClick={() => switchMode('adventure')}>⚔ Quest</button>
         </div>
 
         {/* Desktop: inline rules panel */}
@@ -130,6 +132,7 @@ function App() {
         {currentMode === 'classic_online' && <ClassicArena               matchConfig={cfg} setMatchConfig={setMatchConfig} />}
         {currentMode === 'raid'           && <WorldBossRaid   key={gameKey} matchConfig={cfg} />}
         {currentMode === 'multiplayer'    && <MultiplayerArena            matchConfig={cfg} setMatchConfig={setMatchConfig} />}
+        {currentMode === 'adventure'      && <AdventureMap />}
       </main>
     </div>
   );
