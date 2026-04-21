@@ -357,18 +357,19 @@ export default function MultiplayerArena({
           </div>
         )}
 
-        {/* ── Opponent Flank ── */}
-        <div className="side-column boss-align">
-          <div style={{ color: 'var(--opponent-color)', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '8px', textAlign: 'center' }}>
+        {/* ── Opponent Flank — 5-per-row face-down grid ── */}
+        <div className="side-column boss-align" style={{ width: 'min(28vw, 320px)' }}>
+          <div style={{ color: 'var(--opponent-color)', fontWeight: 'bold', fontSize: '1rem', marginBottom: '6px', textAlign: 'center', fontFamily: 'Cinzel' }}>
             {isMyTurn ? 'WAITING' : "OPP TURN"}
           </div>
-          <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', marginBottom: '8px', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+          <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', marginBottom: '8px', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
             Cards: {opponentHandCount}
           </div>
-          {/* Show up to 5 face-down stacked cards as visual indicator */}
-          <div className="mini-hand boss-stack" style={{ flexDirection: 'column', overflowY: 'auto', maxHeight: 'calc(100svh - var(--header-h) - 120px)' }}>
-            {Array(Math.min(opponentHandCount, 5)).fill(0).map((_, i) => (
-              <div key={i} className="tt-card opponent hidden-card" style={{ width: 'clamp(42px, 5vw, 60px)', height: 'calc(clamp(42px, 5vw, 60px) * 1.5)' }}>?</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', width: '100%' }}>
+            {Array(opponentHandCount).fill(0).map((_, i) => (
+              <div key={i} style={{ aspectRatio: '2/3', position: 'relative' }}>
+                <div className="tt-card opponent hidden-card" style={{ width: '100%', height: '100%' }}>?</div>
+              </div>
             ))}
           </div>
         </div>
@@ -396,18 +397,17 @@ export default function MultiplayerArena({
           </div>
         </div>
 
-        {/* ── Player Flank — all cards always visible ── */}
-        <div className="side-column player-align">
-          <div style={{ color: 'var(--player-color)', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '8px', textAlign: 'center' }}>
+        {/* ── Player Flank — 5-per-row hand grid (5+5+3) ── */}
+        <div className="side-column player-align" style={{ width: 'min(28vw, 320px)' }}>
+          <div style={{ color: 'var(--player-color)', fontWeight: 'bold', fontSize: '1rem', marginBottom: '6px', textAlign: 'center', fontFamily: 'Cinzel' }}>
             {isMyTurn ? 'YOUR TURN' : 'PLEASE WAIT'}
           </div>
-          <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', marginBottom: '8px', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+          <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', marginBottom: '8px', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
             Hand: {myHand.length}
           </div>
-          {/* BUG FIX #2 — scrollable column showing ALL remaining cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', overflowY: 'auto', maxHeight: 'calc(100svh - var(--header-h) - 120px)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', width: '100%' }}>
             {myHand.map(c => (
-              <div key={c.id} style={{ width: 'clamp(42px, 5vw, 60px)', height: 'calc(clamp(42px, 5vw, 60px) * 1.5)', flexShrink: 0 }}>
+              <div key={c.id} style={{ aspectRatio: '2/3', position: 'relative' }}>
                 <DraggableCard card={c} disabled={!isMyTurn || !!gameResult} />
               </div>
             ))}
