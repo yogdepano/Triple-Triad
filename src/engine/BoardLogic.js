@@ -1,33 +1,136 @@
-export function getCardValue(v) {
-  return v === 'A' ? 10 : parseInt(v, 10);
+export function getCardEffectiveValue(v, modifier = 0) {
+  let val = v === 'A' ? 10 : parseInt(v, 10);
+  val += modifier;
+  if (val < 1) val = 1;
+  return val;
 }
 
-export function placeCardOnBoard(board, card, position, gridWidth = 3) {
+export function placeCardOnBoard(board, card, position, gridWidth = 3, activeRules = ['basic'], boardElements = null) {
   const newBoard = [...board];
-  newBoard[position] = card;
-  const adjacentCards = [];
+  newBoard[position] = { ...card, owner: card.owner };
 
-  const row = Math.floor(position / gridWidth);
-  const col = position % gridWidth;
+  const captures = new Set();
+  const capturedBy = {};
+  const comboQueue = [];
 
-  if (row > 0 && newBoard[position - gridWidth]) adjacentCards.push({ index: position - gridWidth, ownVal: card.top, theirVal: newBoard[position - gridWidth].bottom, theirCard: newBoard[position - gridWidth] });
-  if (col < gridWidth - 1 && newBoard[position + 1]) adjacentCards.push({ index: position + 1, ownVal: card.right, theirVal: newBoard[position + 1].left, theirCard: newBoard[position + 1] });
-  if (row < gridWidth - 1 && newBoard[position + gridWidth]) adjacentCards.push({ index: position + gridWidth, ownVal: card.bottom, theirVal: newBoard[position + gridWidth].top, theirCard: newBoard[position + gridWidth] });
-  if (col > 0 && newBoard[position - 1]) adjacentCards.push({ index: position - 1, ownVal: card.left, theirVal: newBoard[position - 1].right, theirCard: newBoard[position - 1] });
+  const getModifier = (c, pos) => {
+    if (!activeRules.includes('elemental') || !boardElements || !boardElements[pos] || !c) return 0;
+    return c.element === boardElements[pos] ? 1 : -1;
+  };
+  const ownMod = getModifier(card, position);
 
-  const captures = [];
+  const getAdjacents = (c, pos) => {
+    const adj = [];
+    const row = Math.floor(pos / gridWidth);
+    const col = pos % gridWidth;
+    const gridHeight = Math.floor(board.length / gridWidth);
+    const mod = getModifier(c, pos);
 
-  adjacentCards.forEach(adj => {
-    if (adj.theirCard.owner !== card.owner) {
-      if (getCardValue(adj.ownVal) > getCardValue(adj.theirVal)) {
-        captures.push(adj.index);
-      }
+    // Actual adjacents
+    if (row > 0 && newBoard[pos - gridWidth]) adj.push({ dir: 'top', index: pos - gridWidth, ownVal: getCardEffectiveValue(c.top, mod), theirVal: getCardEffectiveValue(newBoard[pos - gridWidth].bottom, getModifier(newBoard[pos - gridWidth], pos - gridWidth)), theirCard: newBoard[pos - gridWidth] });
+    if (col < gridWidth - 1 && newBoard[pos + 1]) adj.push({ dir: 'right', index: pos + 1, ownVal: getCardEffectiveValue(c.right, mod), theirVal: getCardEffectiveValue(newBoard[pos + 1].left, getModifier(newBoard[pos + 1], pos + 1)), theirCard: newBoard[pos + 1] });
+    if (row < gridHeight - 1 && newBoard[pos + gridWidth]) adj.push({ dir: 'bottom', index: pos + gridWidth, ownVal: getCardEffectiveValue(c.bottom, mod), theirVal: getCardEffectiveValue(newBoard[pos + gridWidth].top, getModifier(newBoard[pos + gridWidth], pos + gridWidth)), theirCard: newBoard[pos + gridWidth] });
+    if (col > 0 && newBoard[pos - 1]) adj.push({ dir: 'left', index: pos - 1, ownVal: getCardEffectiveValue(c.left, mod), theirVal: getCardEffectiveValue(newBoard[pos - 1].right, getModifier(newBoard[pos - 1], pos - 1)), theirCard: newBoard[pos - 1] });
+
+    // Virtual walls
+    if (activeRules.includes('same_wall') || activeRules.includes('same')) {
+      if (row === 0) adj.push({ dir: 'wall_top', index: -1, ownVal: getCardEffectiveValue(c.top, mod), theirVal: 10, theirCard: { owner: 'wall' } });
+      if (col === gridWidth - 1) adj.push({ dir: 'wall_right', index: -1, ownVal: getCardEffectiveValue(c.right, mod), theirVal: 10, theirCard: { owner: 'wall' } });
+      if (row === gridHeight - 1) adj.push({ dir: 'wall_bottom', index: -1, ownVal: getCardEffectiveValue(c.bottom, mod), theirVal: 10, theirCard: { owner: 'wall' } });
+      if (col === 0) adj.push({ dir: 'wall_left', index: -1, ownVal: getCardEffectiveValue(c.left, mod), theirVal: 10, theirCard: { owner: 'wall' } });
     }
-  });
+    return adj;
+  };
 
+  const adjacentCards = getAdjacents(card, position);
+
+  // --- EQUAL Rule ---
+  if (activeRules.includes('equal')) {
+    adjacentCards.forEach(adj => {
+      if (adj.index >= 0 && adj.theirCard.owner !== card.owner && adj.theirCard.owner !== 'wall' && adj.ownVal === adj.theirVal) {
+        captures.add(adj.index);
+        capturedBy[adj.index] = 'equal';
+        comboQueue.push(adj.index);
+      }
+    });
+  }
+
+  // --- SAME & SAME WALL Rule ---
+  if (activeRules.includes('same') || activeRules.includes('same_wall')) {
+    const sameFlips = [];
+    adjacentCards.forEach(adj => {
+      if (adj.ownVal === adj.theirVal) {
+        // Wall matches only count if same_wall is active
+        if (adj.index === -1 && !activeRules.includes('same_wall')) return;
+        sameFlips.push(adj.index);
+      }
+    });
+    // Requires SAME to be active to actually flip, otherwise it just counts but does nothing
+    if (activeRules.includes('same') && sameFlips.length >= 2) {
+      sameFlips.forEach(idx => {
+        if (idx >= 0 && newBoard[idx].owner !== card.owner) {
+          captures.add(idx);
+          capturedBy[idx] = 'same';
+          comboQueue.push(idx);
+        }
+      });
+    }
+  }
+
+  // --- PLUS Rule ---
+  if (activeRules.includes('plus')) {
+    const sumMap = {};
+    adjacentCards.forEach(adj => {
+      const sum = adj.ownVal + adj.theirVal;
+      if (!sumMap[sum]) sumMap[sum] = [];
+      sumMap[sum].push(adj.index);
+    });
+    Object.values(sumMap).forEach(indices => {
+      if (indices.length >= 2) {
+        indices.forEach(idx => {
+          if (idx >= 0 && newBoard[idx].owner !== card.owner && newBoard[idx].owner !== 'wall') {
+            captures.add(idx);
+            if (!capturedBy[idx]) { capturedBy[idx] = 'plus'; comboQueue.push(idx); }
+          }
+        });
+      }
+    });
+  }
+
+  // --- BASIC Rule ---
+  if (activeRules.includes('basic')) {
+    adjacentCards.forEach(adj => {
+      if (adj.index >= 0 && adj.theirCard.owner !== card.owner && adj.theirCard.owner !== 'wall' && adj.ownVal > adj.theirVal) {
+        captures.add(adj.index);
+        if (!capturedBy[adj.index]) capturedBy[adj.index] = 'basic';
+      }
+    });
+  }
+
+  // Execute initial captures
   captures.forEach(idx => {
     newBoard[idx] = { ...newBoard[idx], owner: card.owner };
   });
 
-  return { newBoard };
+  // --- COMBO Rule ---
+  if (activeRules.includes('combo')) {
+    while (comboQueue.length > 0) {
+      const comboOriginIdx = comboQueue.shift();
+      const comboCard = newBoard[comboOriginIdx];
+      const comboAdjacents = getAdjacents(comboCard, comboOriginIdx);
+      
+      comboAdjacents.forEach(adj => {
+        if (adj.index >= 0 && adj.theirCard.owner !== card.owner && adj.theirCard.owner !== 'wall' && adj.ownVal > adj.theirVal) {
+          if (!captures.has(adj.index)) {
+            captures.add(adj.index);
+            capturedBy[adj.index] = 'combo';
+            comboQueue.push(adj.index);
+            newBoard[adj.index] = { ...newBoard[adj.index], owner: card.owner };
+          }
+        }
+      });
+    }
+  }
+
+  return { newBoard, capturedBy };
 }

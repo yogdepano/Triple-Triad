@@ -1,6 +1,6 @@
 import { placeCardOnBoard } from './BoardLogic';
 
-export function calculateBestMove(board, aiHand, gridWidth = 3) {
+export function calculateBestMove(board, aiHand, gridWidth = 3, activeRules = ['basic'], boardElements = null) {
   let bestScore = -Infinity;
   let bestMove = null;
 
@@ -10,17 +10,34 @@ export function calculateBestMove(board, aiHand, gridWidth = 3) {
   for (let i = 0; i < board.length; i++) {
     if (board[i] === null) emptyIndices.push(i);
   }
-
   if (emptyIndices.length === 0) return null;
 
-  for (let card of aiHand) {
-    for (let index of emptyIndices) {
-      const { newBoard } = placeCardOnBoard(board, card, index, gridWidth);
+  const aiOwner = aiHand[0]?.owner;
+
+  for (const card of aiHand) {
+    for (const index of emptyIndices) {
+      const { newBoard, capturedBy } = placeCardOnBoard(board, card, index, gridWidth, activeRules, boardElements);
+
       let score = 0;
+
+      // Count owned cards after the move
       newBoard.forEach(c => {
-        if (c && c.owner === 'opponent') score++;
+        if (c && c.owner === aiOwner) score++;
       });
-      score += Math.random() * 0.1;
+
+      // Bonus: reward special combos heavily since they flip multiple cards
+      const specialCaptures = Object.values(capturedBy).filter(r => ['same', 'plus', 'equal', 'combo'].includes(r)).length;
+      score += specialCaptures * 2;
+
+      // Positional bonus: prefer center/corner on small grids (3x3)
+      if (gridWidth === 3) {
+        if (index === 4) score += 0.5; // center
+        if ([0, 2, 6, 8].includes(index)) score += 0.3; // corners
+      }
+
+      // Tiebreak with small random noise
+      score += Math.random() * 0.05;
+
       if (score > bestScore) {
         bestScore = score;
         bestMove = { card, index };

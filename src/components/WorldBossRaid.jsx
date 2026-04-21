@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { loadSaveData } from '../data/MockSaveData';
 import { placeCardOnBoard } from '../engine/BoardLogic';
 import { calculateBestMove } from '../engine/AILogic';
-import { DndContext, useDraggable, useDroppable, DragOverlay, closestCenter } from '@dnd-kit/core';
+import { DndContext, useDraggable, useDroppable, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
 const DraggableCard = ({ card, disabled }) => {
@@ -49,7 +49,7 @@ const DroppableCell = ({ id, card }) => {
   );
 };
 
-export default function WorldBossRaid() {
+export default function WorldBossRaid({ activeRules = ['basic'] }) {
   const [board, setBoard] = useState(Array(49).fill(null));
   const [rosterHands, setRosterHands] = useState(Array(10).fill([]));
   const [boss1Hand, setBoss1Hand] = useState([]);
@@ -97,7 +97,7 @@ export default function WorldBossRaid() {
   const activeHandB = rosterHands[activeIndexB] || [];
 
   const executeMove = (placedCard, targetIndex) => {
-    const { newBoard } = placeCardOnBoard(board, placedCard, targetIndex, 7);
+    const { newBoard } = placeCardOnBoard(board, placedCard, targetIndex, 7, activeRules);
     setBoard(newBoard);
     
     if (placedCard.owner.startsWith('player')) {
@@ -148,7 +148,7 @@ export default function WorldBossRaid() {
   }, [currentTurn, board, boss1Hand, boss2Hand]);
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
       <div className="raid-wrapper raid-horizontal-layout">
         <button onClick={resetGame} style={{ position: 'absolute', top: '15px', right: '20px', padding: '8px 16px', background: 'transparent', border: '1px solid var(--player-color)', color: 'white', cursor: 'pointer', fontFamily: 'Cinzel', zIndex: 1000}}>Reset Run</button>
         
