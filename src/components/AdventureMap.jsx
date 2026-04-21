@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { generateMap, completeNode, TOTAL_ROWS } from '../data/MapGenerator';
-import { loadSaveData, saveData } from '../data/MockSaveData';
+import { loadSaveData, saveData, resetAdventureRun, resetAllData } from '../data/MockSaveData';
 import AdventureEncounter from './AdventureEncounter';
 
 const NODE_ICONS = { common: '⚔', elite: '☠', boss: '👑' };
@@ -57,22 +57,36 @@ export default function AdventureMap() {
     return merged;
   }, [mapData, nodeStates]);
 
-  // ── Start a new run ──
+  // ── Start a new run (new map seed, keep cards) ──
   const startRun = () => {
     const seed = Date.now();
     const fresh = generateMap(seed);
-    // Mark bottom row nodes as available
     const initStates = {};
     fresh.startIds.forEach(id => { initStates[id] = { available: true }; });
     setRunSeed(seed);
     setNodeStates(initStates);
     setSelectedNode(null);
-    // Persist
     const data = loadSaveData();
     saveData({
       ...data,
       adventureRun: { ...data.adventureRun, seed, nodes: initStates },
     });
+  };
+
+  // ── Reset current run only (back to ACT I splash, keep cards) ──
+  const handleResetRun = () => {
+    resetAdventureRun();
+    setRunSeed(null);
+    setNodeStates({});
+    setSelectedNode(null);
+    setActiveNode(null);
+  };
+
+  // ── Full factory reset (wipe cards + run, reload page) ──
+  const handleResetAll = () => {
+    if (!window.confirm('Reset EVERYTHING? Your card collection will return to defaults.')) return;
+    resetAllData();
+    window.location.reload();
   };
 
   // ── Mark node complete and unlock next row ──
@@ -153,8 +167,14 @@ export default function AdventureMap() {
           {MAP_RULES.map(r => <span key={r} className="adv-rule-chip">{r}</span>)}
           <span className="adv-rule-chip boss-chip">Boss: {BOSS_EXTRA_RULE}</span>
         </div>
-        <button className="reset-btn" onClick={startRun} style={{ marginLeft: 'auto' }}>
+        <button className="reset-btn" onClick={startRun} title="Generate a new map (keeps your cards)">
           New Run
+        </button>
+        <button className="adv-reset-run-btn" onClick={handleResetRun} title="Go back to ACT I screen">
+          ↩ Reset Run
+        </button>
+        <button className="adv-reset-all-btn" onClick={handleResetAll} title="Factory reset (test only)">
+          🗑 Reset All
         </button>
       </div>
 

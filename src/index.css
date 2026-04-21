@@ -782,6 +782,39 @@ body {
 .adv-rule-chip { font-family: 'Cinzel', serif; font-size: 0.62rem; padding: 2px 9px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.55); }
 .adv-rule-chip.boss-chip { border-color: rgba(255,140,0,0.5); color: #ff8c00; }
 
+/* ── Header action buttons ── */
+.adv-reset-run-btn, .adv-reset-all-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.62rem;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.adv-reset-run-btn {
+  background: transparent;
+  border: 1px solid rgba(74,144,226,0.3);
+  color: rgba(74,144,226,0.7);
+  margin-left: auto;
+}
+.adv-reset-run-btn:hover {
+  background: rgba(74,144,226,0.1);
+  border-color: var(--player-color);
+  color: #fff;
+}
+.adv-reset-all-btn {
+  background: transparent;
+  border: 1px solid rgba(226,74,74,0.3);
+  color: rgba(226,74,74,0.6);
+}
+.adv-reset-all-btn:hover {
+  background: rgba(226,74,74,0.12);
+  border-color: var(--opponent-color);
+  color: #fff;
+}
+
 .adv-map-canvas { flex: 1; position: relative; overflow: hidden; }
 .adv-svg-layer  { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
 .adv-path { stroke-width: 0.4; stroke-dasharray: 2 1.5; fill: none; }

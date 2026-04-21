@@ -61,3 +61,23 @@ export function loadSaveData() {
 export function saveData(data) {
   localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
+
+/** Reset only the adventure run — keeps the player's card collection intact. */
+export function resetAdventureRun() {
+  const data = loadSaveData();
+  saveData({
+    ...data,
+    adventureRun: {
+      seed:           null,
+      act:            1,
+      nodes:          {},
+      bossCardsOwned: [],
+      energyStub:     10,
+    },
+  });
+}
+
+/** Full factory reset — wipes cards AND adventure run back to defaults. For testing only. */
+export function resetAllData() {
+  localStorage.removeItem(SAVE_KEY);
+}
