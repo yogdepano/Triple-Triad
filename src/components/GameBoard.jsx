@@ -52,7 +52,7 @@ const DroppableCell = ({ id, card, flashClass, element }) => {
   );
 };
 
-const RewardPhase = ({ result, playerScore, opponentScore, onReset, board, playerHand, opponentHand, matchConfig, avatarFlippedBy, shields, act1Protection = false }) => {
+const RewardPhase = ({ result, playerScore, opponentScore, onReset, onRetry = null, board, playerHand, opponentHand, matchConfig, avatarFlippedBy, shields, act1Protection = false }) => {
   const [selections, setSelections] = useState([]);
   const [phaseState, setPhaseState] = useState('summary');
   // Compute all derived data once, stably, using useMemo
@@ -98,11 +98,12 @@ const RewardPhase = ({ result, playerScore, opponentScore, onReset, board, playe
   }[result];
 
   if (result === 'draw') {
+    // In adventure mode onRetry goes back to DeckPicker; in solo mode falls back to onReset (new game)
     return (
       <div className={`win-banner ${cfg.cls}`}>
         <div className="banner-title">{cfg.label}</div>
         <div className="banner-score">{playerScore} — {opponentScore}</div>
-        <button className="banner-btn" onClick={onReset}>PLAY AGAIN</button>
+        <button className="banner-btn" onClick={onRetry || onReset}>PLAY AGAIN</button>
       </div>
     );
   }
@@ -164,8 +165,8 @@ const RewardPhase = ({ result, playerScore, opponentScore, onReset, board, playe
           winner === 'player' ? (
             <button className="banner-btn" onClick={() => setPhaseState('selection')} style={{marginTop:'20px'}}>CLAIM LOOT</button>
           ) : act1Protection ? (
-            // Act 1: player is protected — no card stripping on loss
-            <button className="banner-btn" onClick={onReset} style={{marginTop:'20px'}}>TRY AGAIN</button>
+            // Act 1: player is protected — no card stripping on loss; go back to DeckPicker
+            <button className="banner-btn" onClick={onRetry || onReset} style={{marginTop:'20px'}}>TRY AGAIN</button>
           ) : (
             <button className="banner-btn" onClick={handleAITheft} style={{marginTop:'20px'}}>CONTINUE</button>
           )
@@ -237,7 +238,7 @@ const RewardPhase = ({ result, playerScore, opponentScore, onReset, board, playe
 
 
 
-export default function GameBoard({ matchConfig = { basicRules: ['basic'], specialRule: null, infectionRule: null }, onReset, enemyDeck = null, act1Protection = false }) {
+export default function GameBoard({ matchConfig = { basicRules: ['basic'], specialRule: null, infectionRule: null }, onReset, onRetry = null, enemyDeck = null, initialPlayerHand = null, act1Protection = false }) {
   // Derive flat execution list from slots — used by engine and AI
   const activeRules = [...(matchConfig.basicRules || []), matchConfig.specialRule].filter(Boolean);
   const [board, setBoard] = useState(Array(9).fill(null));
@@ -265,13 +266,16 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
       setPlayerHand(customPlayerHand);
       setOpponentHand(customOpponentHand);
     } else if (enemyDeck) {
-      // Adventure Mode: player picks their hand externally, enemy deck injected
+      // Adventure Mode: use the hand the player picked in DeckPicker
       const oHand = enemyDeck.map((c, i) => ({ ...c, id: `adv_o_${i}_${Date.now()}`, owner: 'opponent' }));
-      // Player hand: use whatever was passed in (from DeckPicker); fall back to save data
-      const data = loadSaveData();
-      const pRaw = data.playerDeck.filter(c => !c.isAvatar);
-      const pHand = (isRandom ? [...pRaw].sort(() => 0.5 - Math.random()) : pRaw).slice(0, 5);
-      setPlayerHand(pHand.map((c, i) => ({ ...c, id: `adv_p_${i}_${Date.now()}`, owner: 'player' })));
+      let pRaw;
+      if (initialPlayerHand && initialPlayerHand.length > 0) {
+        pRaw = initialPlayerHand;
+      } else {
+        const pPool = data.playerDeck.filter(c => !c.isAvatar);
+        pRaw = (isRandom ? [...pPool].sort(() => 0.5 - Math.random()) : pPool).slice(0, 5);
+      }
+      setPlayerHand(pRaw.map((c, i) => ({ ...c, id: `adv_p_${i}_${Date.now()}`, owner: 'player' })));
       setOpponentHand(oHand);
     } else {
       // Restore Avatars to respective owners for testing
@@ -410,7 +414,8 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
             result={gameResult} 
             playerScore={playerScore} 
             opponentScore={opponentScore} 
-            onReset={onReset} 
+            onReset={onReset}
+            onRetry={onRetry}
             board={board}
             playerHand={playerHand}
             opponentHand={opponentHand}

@@ -80,28 +80,14 @@ export default function AdventureEncounter({ node, onComplete, onCancel }) {
     onComplete({ nodeId: node.id, wonBossCard });
   };
 
-  // Player hand: stamped with owner + unique ids
-  const playerHand = pickedHand?.map((c, i) => ({
-    ...c,
-    id:    `adv_p_${i}_${Date.now()}`,
-    owner: 'player',
-  }));
-
-  // Enemy hand: already has owner:'opponent', give fresh ids
-  const opponentHand = enemyDeck.map((c, i) => ({
-    ...c,
-    id:    `adv_o_${i}_${Date.now()}`,
-    owner: 'opponent',
-  }));
-
   return (
     <GameBoard
       matchConfig={matchConfig}
       onReset={handleReset}
+      onRetry={() => setPhase('picking')}
       enemyDeck={enemyDeck}
+      initialPlayerHand={pickedHand}
       act1Protection={true}
-      // Override both hands directly via the customPlayerHand/customOpponentHand path
-      // (done by passing them through initGame inside GameBoard)
     />
   );
 }
