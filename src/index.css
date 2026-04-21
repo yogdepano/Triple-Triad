@@ -797,7 +797,6 @@ body {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.25);
   color: rgba(255,255,255,0.7);
-  margin-left: auto;  /* push all 3 buttons to the right */
 }
 .adv-new-run-btn:hover {
   background: rgba(255,255,255,0.07);
@@ -831,14 +830,25 @@ body {
 .adv-path.path-active { stroke: rgba(74,144,226,0.5); }
 .adv-path.path-locked { stroke: rgba(255,255,255,0.1); }
 
+/* Floating controls — always visible top-right corner of the map */
+.adv-controls {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 20;
+}
+
 .adv-row { position: absolute; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: center; z-index: 1; }
 .adv-node-pos { position: absolute; transform: translateX(-50%); }
 
 .map-node {
-  width: 44px; height: 44px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; border: 2px solid; transition: transform 0.2s, box-shadow 0.2s;
-  font-size: 1.1rem; user-select: none;
+  font-size: 0.9rem; user-select: none;
 }
 .map-node:hover { transform: scale(1.15); }
 .node-available  { border-color: var(--player-color); background: rgba(74,144,226,0.15); box-shadow: 0 0 12px rgba(74,144,226,0.45); }

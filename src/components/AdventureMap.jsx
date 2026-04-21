@@ -157,7 +157,7 @@ export default function AdventureMap() {
 
   return (
     <div className="adv-wrapper">
-      {/* Header */}
+      {/* Thin info bar — title + rules only, no buttons */}
       <div className="adv-header">
         <div className="adv-header-left">
           <span className="adv-act-badge">ACT I</span>
@@ -167,19 +167,17 @@ export default function AdventureMap() {
           {MAP_RULES.map(r => <span key={r} className="adv-rule-chip">{r}</span>)}
           <span className="adv-rule-chip boss-chip">Boss: {BOSS_EXTRA_RULE}</span>
         </div>
-        <button className="adv-new-run-btn" onClick={startRun} title="Generate a new map (keeps your cards)">
-          ↺ New Run
-        </button>
-        <button className="adv-reset-run-btn" onClick={handleResetRun} title="Go back to ACT I screen">
-          ↩ Reset Run
-        </button>
-        <button className="adv-reset-all-btn" onClick={handleResetAll} title="Factory reset (test only)">
-          🗑 Reset All
-        </button>
       </div>
 
       {/* Map canvas */}
       <div className="adv-map-canvas">
+        {/* Floating control buttons — always visible top-right */}
+        <div className="adv-controls">
+          <button className="adv-new-run-btn" onClick={startRun} title="Generate a new map (keeps cards)">↺ New Run</button>
+          <button className="adv-reset-run-btn" onClick={handleResetRun} title="Back to ACT I screen">↩ Reset Run</button>
+          <button className="adv-reset-all-btn" onClick={handleResetAll} title="Full factory reset">🗑 Reset All</button>
+        </div>
+
         {/* SVG connector lines */}
         <svg className="adv-svg-layer" viewBox="0 0 100 100" preserveAspectRatio="none">
           {Object.values(nodes).map(n => (
@@ -188,9 +186,9 @@ export default function AdventureMap() {
                 const target = nodes[targetId];
                 if (!target) return null;
                 const x1 = n.x * 100;
-                const y1 = (1 - n.row / (TOTAL_ROWS - 1)) * 92 + 4;
+                const y1 = (1 - n.row / (TOTAL_ROWS - 1)) * 78 + 6;
                 const x2 = target.x * 100;
-                const y2 = (1 - target.row / (TOTAL_ROWS - 1)) * 92 + 4;
+                const y2 = (1 - target.row / (TOTAL_ROWS - 1)) * 78 + 6;
                 const isActive = n.completed || n.available;
                 return (
                   <line
@@ -209,7 +207,7 @@ export default function AdventureMap() {
           <div
             key={rowIdx}
             className="adv-row"
-            style={{ top: `${(1 - rowIdx / (TOTAL_ROWS - 1)) * 92 + 4}%` }}
+            style={{ top: `${(1 - rowIdx / (TOTAL_ROWS - 1)) * 78 + 6}%` }}
           >
             {rowNodes.map(n => (
               <div
@@ -227,6 +225,7 @@ export default function AdventureMap() {
           </div>
         ))}
       </div>
+
 
       {/* Node info panel */}
       {selectedNode && (
