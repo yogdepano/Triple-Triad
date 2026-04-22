@@ -42,7 +42,7 @@ function rulesArrayToConfig(rules) {
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
-const DraggableCard = ({ card, disabled }) => {
+const DraggableCard = ({ card, disabled, myOwner }) => {
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
     id: `ca-card-${card.id}`,
     data: { card },
@@ -52,7 +52,7 @@ const DraggableCard = ({ card, disabled }) => {
   return (
     <div
       ref={setNodeRef} {...listeners} {...attributes}
-      className={`tt-card player1 ${isDragging ? 'dragging' : ''}`}
+      className={`tt-card ${myOwner} ${isDragging ? 'dragging' : ''}`}
       style={{ ...style, width: '100%', height: '100%' }}
     >
       <div className="card-bg" style={{ backgroundImage: `url(${card.image})` }} />
@@ -103,7 +103,7 @@ export default function ClassicArena({
   const [peerId,     setPeerId]     = useState('');
   const [targetId,   setTargetId]   = useState('');
   const [connection, setConnection] = useState(null);
-  const [status,     setStatus]     = useState('lobby');
+  const [status,     setStatus]     = useState('lobby'); // lobby, waiting, connected, connecting
 
   const [board,         setBoard]         = useState(Array(BOARD_SIZE).fill(null));
   const [boardElements, setBoardElements] = useState(Array(BOARD_SIZE).fill(null));
@@ -128,8 +128,11 @@ export default function ClassicArena({
       setArenaRules(propsRules);
       arenaRulesRef.current = propsRules;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchConfig, rulesLocked]);
+
+  useEffect(() => {
+    console.log('ClassicArena: status changed to:', status);
+  }, [status]);
 
   const getMyOwner = r => r === 'host' ? 'player1' : 'player2';
   const myOwner    = getMyOwner(role);
@@ -156,82 +159,133 @@ export default function ClassicArena({
 
   // ── PeerJS bootstrap ──
   const handleConnection = (conn, r) => {
-    roleRef.current = r;
-    setRole(r);
-    setConnection(conn);
-    setStatus('connected');
-    setIsMyTurn(r === 'host');
-    initHands(r);
+    console.log(`ClassicArena: handleConnection called as ${r}`);
+    try {
+      roleRef.current = r;
+      setRole(r);
+      setConnection(conn);
+      setStatus('connected');
+      setIsMyTurn(r === 'host');
+      initHands(r);
 
-    if (r === 'host') {
-      conn.on('open', () => {
-        const elements = generateElements(arenaRulesRef.current);
-        setBoardElements(elements);
-        boardElementsRef.current = elements;
-        conn.send({ type: 'HOST_RULES', rules: arenaRulesRef.current, boardElements: elements });
-      });
-    }
-
-    conn.on('data', (data) => {
-      if (data.type === 'HOST_RULES') {
-        const rules = data.rules || [];
-        if (setMatchConfig) setMatchConfig(rulesArrayToConfig(rules));
-        setArenaRules(rules);
-        arenaRulesRef.current = rules;
-        setRulesLocked(true);
-        if (data.boardElements) {
-          setBoardElements(data.boardElements);
-          boardElementsRef.current = data.boardElements;
-        }
-
-      } else if (data.type === 'MOVE') {
-        if (data.rules) { setArenaRules(data.rules); arenaRulesRef.current = data.rules; }
-        const toFlash = {};
-        if (data.capturedBy) {
-          Object.entries(data.capturedBy).forEach(([idx, rule]) => {
-            if (['same', 'plus', 'equal', 'combo'].includes(rule)) toFlash[idx] = rule;
-          });
-        }
-        if (Object.keys(toFlash).length > 0) {
-          setFlashMap(toFlash);
-          setTimeout(() => setFlashMap({}), 750);
-        }
-        setBoard(data.board);
-        // Remove one face-down card from opponent hand
-        setOpponentHand(prev => prev.length > 0 ? prev.slice(0, -1) : prev);
-        setIsMyTurn(true);
-        const result = evalResult(data.board, getMyOwner(roleRef.current));
-        if (result) setGameResult(result);
-
-      } else if (data.type === 'RESET') {
-        setBoard(Array(BOARD_SIZE).fill(null));
-        if (data.boardElements) {
-          setBoardElements(data.boardElements);
-          boardElementsRef.current = data.boardElements;
-        }
-        initHands(roleRef.current);
-        setIsMyTurn(roleRef.current === 'host');
-        setFlashMap({});
-        setGameResult(null);
+      if (r === 'host') {
+        // For host, conn is already open from peer.on('connection') usually, 
+        // but we send rules on open to be safe.
+        const sendRules = () => {
+          console.log('ClassicArena: Connection open, host sending rules...');
+          const elements = generateElements(arenaRulesRef.current);
+          setBoardElements(elements);
+          boardElementsRef.current = elements;
+          conn.send({ type: 'HOST_RULES', rules: arenaRulesRef.current, boardElements: elements });
+        };
+        if (conn.open) sendRules();
+        else conn.on('open', sendRules);
       }
-    });
+
+      conn.on('data', (data) => {
+        console.log('ClassicArena: Data received:', data.type);
+        if (data.type === 'HOST_RULES') {
+          const rules = data.rules || [];
+          if (setMatchConfig) setMatchConfig(rulesArrayToConfig(rules));
+          setArenaRules(rules);
+          arenaRulesRef.current = rules;
+          setRulesLocked(true);
+          if (data.boardElements) {
+            setBoardElements(data.boardElements);
+            boardElementsRef.current = data.boardElements;
+          }
+        } else if (data.type === 'MOVE') {
+          if (data.rules) { setArenaRules(data.rules); arenaRulesRef.current = data.rules; }
+          const toFlash = {};
+          if (data.capturedBy) {
+            Object.entries(data.capturedBy).forEach(([idx, rule]) => {
+              if (['same', 'plus', 'equal', 'combo'].includes(rule)) toFlash[idx] = rule;
+            });
+          }
+          if (Object.keys(toFlash).length > 0) {
+            setFlashMap(toFlash);
+            setTimeout(() => setFlashMap({}), 750);
+          }
+          setBoard(data.board);
+          setOpponentHand(prev => prev.length > 0 ? prev.slice(0, -1) : prev);
+          setIsMyTurn(true);
+          const result = evalResult(data.board, getMyOwner(roleRef.current));
+          if (result) setGameResult(result);
+        } else if (data.type === 'RESET') {
+          setBoard(Array(BOARD_SIZE).fill(null));
+          if (data.boardElements) {
+            setBoardElements(data.boardElements);
+            boardElementsRef.current = data.boardElements;
+          }
+          initHands(roleRef.current);
+          setIsMyTurn(roleRef.current === 'host');
+          setFlashMap({});
+          setGameResult(null);
+        }
+      });
+
+      conn.on('error', err => console.error('ClassicArena: Connection error:', err));
+      conn.on('close', () => console.warn('ClassicArena: Connection closed'));
+
+    } catch (err) {
+      console.error('ClassicArena: Error in handleConnection:', err);
+    }
   };
 
   const createRoom = () => {
-    setStatus('waiting');
-    const peer = new Peer();
-    peer.on('open', id => setPeerId(id));
-    peer.on('connection', conn => handleConnection(conn, 'host'));
-    peerInstance.current = peer;
+    console.log('ClassicArena: createRoom button clicked');
+    try {
+      setStatus('waiting');
+      const peer = new Peer();
+      console.log('ClassicArena: Peer object created:', peer);
+      peer.on('open', id => {
+        console.log('ClassicArena: Peer open, id:', id);
+        setPeerId(id);
+      });
+      peer.on('error', err => {
+        console.error('ClassicArena: Peer error:', err);
+      });
+      peer.on('connection', conn => {
+        console.log('ClassicArena: Peer received connection:', conn);
+        handleConnection(conn, 'host');
+      });
+      peerInstance.current = peer;
+    } catch (err) {
+      console.error('ClassicArena: Error in createRoom:', err);
+    }
   };
 
   const joinRoom = () => {
-    const peer = new Peer();
-    peer.on('open', () => {
-      const conn = peer.connect(targetId);
-      conn.on('open', () => handleConnection(conn, 'guest'));
-    });
-    peerInstance.current = peer;
+    console.log('ClassicArena: joinRoom called with targetId:', targetId);
+    if (!targetId) return;
+    try {
+      setStatus('connecting');
+      const peer = new Peer();
+      peerInstance.current = peer;
+      
+      peer.on('open', id => {
+        console.log('ClassicArena: Guest Peer open, connecting to:', targetId);
+        const conn = peer.connect(targetId);
+        conn.on('open', () => {
+          console.log('ClassicArena: Guest connection opened successfully');
+          handleConnection(conn, 'guest');
+        });
+        conn.on('error', err => {
+          console.error('ClassicArena: Guest conn error:', err);
+          setStatus('lobby');
+          alert('Failed to connect to host. Check the code.');
+        });
+      });
+
+      peer.on('error', err => {
+        console.error('ClassicArena: Guest peer error:', err);
+        setStatus('lobby');
+        alert('Could not initialize network. Try again.');
+      });
+    } catch (err) {
+      console.error('ClassicArena: Error in joinRoom:', err);
+      setStatus('lobby');
+    }
   };
 
   const resetMatch = () => {
@@ -336,14 +390,16 @@ export default function ClassicArena({
   // ════════════════════════════════════════════════════════════════
   // WAITING ROOM
   // ════════════════════════════════════════════════════════════════
-  if (status === 'waiting') {
+  if (status === 'waiting' || status === 'connecting') {
     return (
       <div className="spire-wrapper" style={{ flexDirection: 'column', gap: '20px' }}>
-        <h2 style={{ color: 'gray' }}>Waiting for opponent...</h2>
-        <div style={{ fontSize: '2rem', padding: '20px', border: '1px dashed var(--player-color)', borderRadius: '10px', letterSpacing: '4px' }}>
-          {peerId || 'Generating...'}
-        </div>
-        <p>Send this code to your opponent.</p>
+        <h2 style={{ color: 'gray' }}>{status === 'waiting' ? 'Waiting for opponent...' : 'Connecting to host...'}</h2>
+        {status === 'waiting' && (
+          <div style={{ fontSize: '2rem', padding: '20px', border: '1px dashed var(--player-color)', borderRadius: '10px', letterSpacing: '4px' }}>
+            {peerId || 'Generating...'}
+          </div>
+        )}
+        <p>{status === 'waiting' ? 'Send this code to your opponent.' : 'Establishing secure link...'}</p>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Active rules will be synced on connect.</p>
       </div>
     );
@@ -423,7 +479,7 @@ export default function ClassicArena({
             </div>
             {myHand.map(c => (
               <div key={c.id} className="hand-card-slot">
-                <DraggableCard card={c} disabled={!isMyTurn || !!gameResult} />
+                <DraggableCard card={c} disabled={!isMyTurn || !!gameResult} myOwner={myOwner} />
               </div>
             ))}
           </div>
