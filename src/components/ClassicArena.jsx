@@ -130,10 +130,6 @@ export default function ClassicArena({
     }
   }, [matchConfig, rulesLocked]);
 
-  useEffect(() => {
-    console.log('ClassicArena: status changed to:', status);
-  }, [status]);
-
   const getMyOwner = r => r === 'host' ? 'player1' : 'player2';
   const myOwner    = getMyOwner(role);
   const theirOwner = role === 'host' ? 'player2' : 'player1';
@@ -159,7 +155,6 @@ export default function ClassicArena({
 
   // ── PeerJS bootstrap ──
   const handleConnection = (conn, r) => {
-    console.log(`ClassicArena: handleConnection called as ${r}`);
     try {
       roleRef.current = r;
       setRole(r);
@@ -169,10 +164,7 @@ export default function ClassicArena({
       initHands(r);
 
       if (r === 'host') {
-        // For host, conn is already open from peer.on('connection') usually, 
-        // but we send rules on open to be safe.
         const sendRules = () => {
-          console.log('ClassicArena: Connection open, host sending rules...');
           const elements = generateElements(arenaRulesRef.current);
           setBoardElements(elements);
           boardElementsRef.current = elements;
@@ -183,7 +175,6 @@ export default function ClassicArena({
       }
 
       conn.on('data', (data) => {
-        console.log('ClassicArena: Data received:', data.type);
         if (data.type === 'HOST_RULES') {
           const rules = data.rules || [];
           if (setMatchConfig) setMatchConfig(rulesArrayToConfig(rules));
@@ -225,7 +216,6 @@ export default function ClassicArena({
       });
 
       conn.on('error', err => console.error('ClassicArena: Connection error:', err));
-      conn.on('close', () => console.warn('ClassicArena: Connection closed'));
 
     } catch (err) {
       console.error('ClassicArena: Error in handleConnection:', err);
@@ -233,22 +223,12 @@ export default function ClassicArena({
   };
 
   const createRoom = () => {
-    console.log('ClassicArena: createRoom button clicked');
     try {
       setStatus('waiting');
       const peer = new Peer();
-      console.log('ClassicArena: Peer object created:', peer);
-      peer.on('open', id => {
-        console.log('ClassicArena: Peer open, id:', id);
-        setPeerId(id);
-      });
-      peer.on('error', err => {
-        console.error('ClassicArena: Peer error:', err);
-      });
-      peer.on('connection', conn => {
-        console.log('ClassicArena: Peer received connection:', conn);
-        handleConnection(conn, 'host');
-      });
+      peer.on('open', id => setPeerId(id));
+      peer.on('error', err => console.error('ClassicArena: Peer error:', err));
+      peer.on('connection', conn => handleConnection(conn, 'host'));
       peerInstance.current = peer;
     } catch (err) {
       console.error('ClassicArena: Error in createRoom:', err);
@@ -256,7 +236,6 @@ export default function ClassicArena({
   };
 
   const joinRoom = () => {
-    console.log('ClassicArena: joinRoom called with targetId:', targetId);
     if (!targetId) return;
     try {
       setStatus('connecting');
@@ -264,12 +243,8 @@ export default function ClassicArena({
       peerInstance.current = peer;
       
       peer.on('open', id => {
-        console.log('ClassicArena: Guest Peer open, connecting to:', targetId);
         const conn = peer.connect(targetId);
-        conn.on('open', () => {
-          console.log('ClassicArena: Guest connection opened successfully');
-          handleConnection(conn, 'guest');
-        });
+        conn.on('open', () => handleConnection(conn, 'guest'));
         conn.on('error', err => {
           console.error('ClassicArena: Guest conn error:', err);
           setStatus('lobby');
