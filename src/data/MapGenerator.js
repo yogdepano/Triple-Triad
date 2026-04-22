@@ -1,19 +1,28 @@
 // ─── Seeded RNG (no external deps) ──────────────────────────────────────────
+// Uses Math.imul() for true 32-bit integer multiplication so that large
+// millisecond timestamps don't lose precision in JS floating-point arithmetic.
+// The seed is first hashed through two mixing rounds so that seeds that differ
+// by small amounts (e.g. consecutive Date.now() calls) produce very different
+// starting states.
 function seededRng(seed) {
-  let s = seed;
+  // Collapse the large timestamp into 32 bits via xor-shift mixing
+  let s = seed ^ (seed / 0x100000000 | 0); // xor high bits into low bits
+  s = Math.imul(s ^ (s >>> 16), 0x45d9f3b) | 0;
+  s = Math.imul(s ^ (s >>> 16), 0xb5297a4d) | 0;
+  s = s ^ (s >>> 16);
+  if (s === 0) s = 1; // avoid all-zero state
+
   return () => {
-    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    // LCG step using 32-bit integer arithmetic (no float precision loss)
+    s = (Math.imul(s, 1664525) + 1013904223) | 0;
     return (s >>> 0) / 0xffffffff;
   };
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const ROWS      = 10;
-const MIN_COLS  = 2;
-const MAX_COLS  = 3;
+const ROWS = 10;
 
 // Row index → node type
-// rows 0-6 = common, 7-8 = elite, 9 = boss
 function typeForRow(row) {
   if (row === ROWS - 1) return 'boss';
   if (row >= ROWS - 3)  return 'elite';
@@ -21,62 +30,128 @@ function typeForRow(row) {
 }
 
 /**
- * Generate a non-crossing DAG map.
+ * Place n nodes freely within the canvas row.
+ *
+ * Key idea: instead of spreading nodes across the full width, we:
+ *   1. Pick random gaps between adjacent nodes (MIN_GAP … MAX_GAP).
+ *   2. Pick a random anchor (start x) so the whole cluster can sit
+ *      anywhere — left-heavy, right-heavy, center, etc.
+ *
+ * Positions are sorted ascending so topological (no-crossing) connections
+ * between rows still hold visually.
+ */
+function randomXPositions(n, rng) {
+  const MARGIN  = 0.06;  // min distance from canvas edge
+  const MIN_GAP = 0.10;  // min gap between adjacent nodes in same row
+  const MAX_GAP = 0.38;  // max gap — controls how spread-out a cluster can be
+
+  if (n === 1) {
+    // Single node: fully free anywhere within margins
+    return [MARGIN + rng() * (1 - 2 * MARGIN)];
+  }
+
+  // Step 1 — random gaps between the n nodes
+  const gaps = Array.from({ length: n - 1 }, () => MIN_GAP + rng() * (MAX_GAP - MIN_GAP));
+  const totalSpan = gaps.reduce((a, b) => a + b, 0);
+
+  // Step 2 — random start so the cluster fits within [MARGIN, 1-MARGIN]
+  const room  = (1 - 2 * MARGIN) - totalSpan;
+  const start = room > 0
+    ? MARGIN + rng() * room   // cluster can start anywhere it fits
+    : MARGIN;                  // fallback: pin to left margin if cluster is very wide
+
+  // Step 3 — build sorted positions
+  const positions = [start];
+  gaps.forEach(g => positions.push(positions[positions.length - 1] + g));
+
+  // Clamp to [MARGIN, 1-MARGIN] just in case of floating-point drift
+  return positions.map(p => Math.max(MARGIN, Math.min(1 - MARGIN, p)));
+}
+
+/**
+ * Generate a non-crossing DAG map with fully randomised structure.
  *
  * Returns { nodes: { [id]: NodeDef }, startIds: string[], bossId: string }
  *
  * NodeDef shape:
- *   { id, row, col, colCount, x, type, connections: [id], completed, available }
+ *   { id, row, col, colCount, x, y, type, connections: [id], completed, available }
+ *
+ * `x` and `y` are normalised [0,1] for canvas positioning.
  */
 export function generateMap(seed = Date.now()) {
   const rng = seededRng(seed);
 
-  // 1. Decide column count per row
+  // ── 1. Randomised vertical positions (order-statistics) ──────────────────
+  // Generates ROWS-2 random values for interior rows, sorts them so ordering
+  // is always preserved (row 0 at bottom, row ROWS-1 at top), then rescales
+  // interior into (0.08 … 0.92) so there's breathing room at both ends.
+  const interior = Array.from({ length: ROWS - 2 }, () => rng()).sort((a, b) => a - b);
+  const rowY = [0, ...interior.map(v => 0.08 + v * 0.84), 1];
+
+  // ── 2. Column counts per row ──────────────────────────────────────────────
+  // Start row: 1, 2, or 3 nodes — equal chance so some runs start narrow.
+  // Middle rows: weighted heavily toward 1 (bottleneck) so the silhouette
+  //   varies wildly between runs — not always a wide pyramid/house.
+  // Boss row: always 1.
   const colCounts = [];
   for (let r = 0; r < ROWS; r++) {
-    if (r === ROWS - 1) { colCounts.push(1); continue; }
-    colCounts.push(rng() < 0.5 ? MIN_COLS : MAX_COLS);
+    if (r === ROWS - 1) { colCounts.push(1); continue; } // boss
+    if (r === 0) {
+      // Start row: 33% each for 1, 2, 3
+      const v = rng();
+      colCounts.push(v < 0.33 ? 1 : v < 0.66 ? 2 : 3);
+      continue;
+    }
+
+    // Middle rows: 55% → 1 node (bottleneck), 35% → 2, 10% → 3
+    const v = rng();
+    if (v < 0.55)      colCounts.push(1);
+    else if (v < 0.90) colCounts.push(2);
+    else               colCounts.push(3);
   }
 
-  // 2. Build node objects
+  // ── 3. Build node objects ─────────────────────────────────────────────────
+  // x positions are fully random per row (not derived from column index),
+  // so no two runs share the same lane structure.
   const nodes = {};
   for (let r = 0; r < ROWS; r++) {
-    const count = colCounts[r];
+    const count    = colCounts[r];
+    const xPos     = randomXPositions(count, rng); // sorted ascending
+
     for (let c = 0; c < count; c++) {
       const id = `n_${r}_${c}`;
-      // Evenly spaced x positions between 0.15 and 0.85
-      const x = count === 1 ? 0.5 : 0.15 + (c / (count - 1)) * 0.7;
       nodes[id] = {
         id,
-        row:          r,
-        col:          c,
-        colCount:     count,
-        x,
-        type:         typeForRow(r),
-        connections:  [],   // filled next step
-        completed:    false,
-        available:    r === 0,  // bottom row starts available
+        row:         r,
+        col:         c,
+        colCount:    count,
+        x:           xPos[c],   // truly random, not column-index formula
+        y:           rowY[r],   // seeded random vertical position
+        type:        typeForRow(r),
+        connections: [],
+        completed:   false,
+        available:   r === 0,
       };
     }
   }
 
-  // 3. Build connections row-by-row (no crossing edges)
+  // ── 4. Build connections row-by-row (no crossing edges) ───────────────────
+  // Because xPos is sorted ascending, col-index-proportional connections
+  // still guarantee no visual edge crossings.
   for (let r = 0; r < ROWS - 1; r++) {
     const curCount  = colCounts[r];
     const nextCount = colCounts[r + 1];
     const curIds    = Array.from({ length: curCount  }, (_, c) => `n_${r}_${c}`);
     const nextIds   = Array.from({ length: nextCount }, (_, c) => `n_${r + 1}_${c}`);
 
-    // Ensure every next-row node has at least one incoming edge
     const covered = new Set();
 
     curIds.forEach((cid, ci) => {
-      // Map column index proportionally, add optional second target
       const target1 = Math.round((ci / (curCount - 1 || 1)) * (nextCount - 1));
       nodes[cid].connections.push(nextIds[target1]);
       covered.add(target1);
 
-      // With 40% chance, also connect to an adjacent next-row node
+      // 40% chance of an extra adjacent connection
       if (nextCount > 1 && rng() < 0.4) {
         const target2 = target1 < nextCount - 1 ? target1 + 1 : target1 - 1;
         if (!nodes[cid].connections.includes(nextIds[target2])) {
@@ -89,7 +164,6 @@ export function generateMap(seed = Date.now()) {
     // Guarantee every next-row node is reachable
     nextIds.forEach((nid, ni) => {
       if (!covered.has(ni)) {
-        // Connect from the closest current-row node
         const closest = Math.round((ni / (nextCount - 1 || 1)) * (curCount - 1));
         if (!nodes[curIds[closest]].connections.includes(nid)) {
           nodes[curIds[closest]].connections.push(nid);

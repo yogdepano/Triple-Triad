@@ -841,8 +841,8 @@ body {
   z-index: 20;
 }
 
-.adv-row { position: absolute; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: center; z-index: 1; }
-.adv-node-pos { position: absolute; transform: translateX(-50%); }
+.adv-row { position: absolute; left: 0; right: 0; height: 0; z-index: 1; }
+.adv-node-pos { position: absolute; top: 0; transform: translate(-50%, -50%); }
 
 .map-node {
   width: 36px; height: 36px; border-radius: 50%;

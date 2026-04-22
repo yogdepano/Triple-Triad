@@ -145,15 +145,7 @@ export default function AdventureMap() {
   }
 
   // ── Render map ──
-  // Rows indexed 0 (bottom) → TOTAL_ROWS-1 (top/boss)
-  // We render top-to-bottom visually (boss first)
-  const rowGroups = {};
-  Object.values(nodes).forEach(n => {
-    if (!rowGroups[n.row]) rowGroups[n.row] = [];
-    rowGroups[n.row].push(n);
-  });
-  const rows = Array.from({ length: TOTAL_ROWS }, (_, i) => TOTAL_ROWS - 1 - i)
-    .map(rowIdx => ({ rowIdx, nodes: (rowGroups[rowIdx] || []).sort((a, b) => a.col - b.col) }));
+  const allNodes = Object.values(nodes);
 
   return (
     <div className="adv-wrapper">
@@ -186,9 +178,9 @@ export default function AdventureMap() {
                 const target = nodes[targetId];
                 if (!target) return null;
                 const x1 = n.x * 100;
-                const y1 = (1 - n.row / (TOTAL_ROWS - 1)) * 78 + 6;
+                const y1 = (1 - n.y) * 78 + 6;
                 const x2 = target.x * 100;
-                const y2 = (1 - target.row / (TOTAL_ROWS - 1)) * 78 + 6;
+                const y2 = (1 - target.y) * 78 + 6;
                 const isActive = n.completed || n.available;
                 return (
                   <line
@@ -202,26 +194,23 @@ export default function AdventureMap() {
           ))}
         </svg>
 
-        {/* Nodes */}
-        {rows.map(({ rowIdx, nodes: rowNodes }) => (
+        {/* Nodes — each placed directly on the canvas via its x,y */}
+        {allNodes.map(n => (
           <div
-            key={rowIdx}
-            className="adv-row"
-            style={{ top: `${(1 - rowIdx / (TOTAL_ROWS - 1)) * 78 + 6}%` }}
+            key={n.id}
+            style={{
+              position: 'absolute',
+              left: `${n.x * 100}%`,
+              top:  `${(1 - n.y) * 78 + 6}%`,
+              transform: 'translate(-50%, -50%)',
+              zIndex: 1,
+            }}
           >
-            {rowNodes.map(n => (
-              <div
-                key={n.id}
-                className="adv-node-pos"
-                style={{ left: `${n.x * 100}%` }}
-              >
-                <MapNode
-                  node={n}
-                  isSelected={selectedNode?.id === n.id}
-                  onClick={setSelectedNode}
-                />
-              </div>
-            ))}
+            <MapNode
+              node={n}
+              isSelected={selectedNode?.id === n.id}
+              onClick={setSelectedNode}
+            />
           </div>
         ))}
       </div>
