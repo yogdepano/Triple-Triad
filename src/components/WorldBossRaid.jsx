@@ -72,24 +72,46 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
     setTurnIndex(0);
     setPairIndex(0);
 
-    const b1 = [], b2 = [];
-    for(let i=0; i<25; i++) {
-        b1.push({...data.opponentDeck[i % data.opponentDeck.length], id: `b1_${i}`, owner: 'boss1'});
-        b2.push({...data.opponentDeck[i % data.opponentDeck.length], id: `b2_${i}`, owner: 'boss2'});
-    }
+    const buildHand = (pool, size, prefix, owner) => {
+      const avatars = pool.filter(c => c.isAvatar);
+      const nonAvatars = pool.filter(c => !c.isAvatar);
+      const hand = [];
+      
+      const uniqueAvatars = Array.from(new Set(avatars.map(a => a.name)))
+        .map(name => avatars.find(a => a.name === name));
+      
+      uniqueAvatars.forEach((av, i) => {
+        if (hand.length < size) {
+          hand.push({ ...av, id: `${prefix}_av_${i}`, owner });
+        }
+      });
+
+      if (nonAvatars.length > 0) {
+        while (hand.length < size) {
+          const card = nonAvatars[Math.floor(Math.random() * nonAvatars.length)];
+          hand.push({ ...card, id: `${prefix}_${hand.length}`, owner });
+        }
+      } else {
+        while (hand.length < size) {
+          const card = pool[Math.floor(Math.random() * pool.length)];
+          hand.push({ ...card, id: `${prefix}_${hand.length}`, owner });
+        }
+      }
+      return hand.sort(() => Math.random() - 0.5);
+    };
+
+    const b1 = buildHand(data.opponentDeck, 25, 'b1', 'boss1');
+    const b2 = buildHand(data.opponentDeck, 25, 'b2', 'boss2');
     
     const newRoster = Array(10).fill(null).map((_, pNum) => {
-        const pHand = [];
-        for(let i=0; i<5; i++) {
-           pHand.push({...data.playerDeck[(pNum + i) % data.playerDeck.length], id: `p${pNum}_${i}`, owner: `player_${pNum}`});
-        }
-        return pHand;
+        return buildHand(data.playerDeck, 5, `p${pNum}`, `player_${pNum}`);
     });
 
     setBoss1Hand(b1);
     setBoss2Hand(b2);
     setRosterHands(newRoster);
   };
+
 
   const activeIndexA = pairIndex * 2;
   const activeIndexB = pairIndex * 2 + 1;

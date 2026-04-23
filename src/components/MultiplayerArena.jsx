@@ -172,14 +172,41 @@ export default function MultiplayerArena({
     const data     = loadSaveData();
     const baseDeck = r === 'host' ? data.playerDeck : data.opponentDeck;
     const owner    = getMyOwner(r);
-    const fullHand = [];
-    for (let i = 0; i < DECK_TOTAL; i++) {
-      fullHand.push({ ...baseDeck[i % baseDeck.length], id: `${r}_${i}`, owner });
-    }
+    
+    const buildHand = (pool, size, prefix, ownerVal) => {
+      const avatars = pool.filter(c => c.isAvatar);
+      const nonAvatars = pool.filter(c => !c.isAvatar);
+      const hand = [];
+      
+      const uniqueAvatars = Array.from(new Set(avatars.map(a => a.name)))
+        .map(name => avatars.find(a => a.name === name));
+      
+      uniqueAvatars.forEach((av, i) => {
+        if (hand.length < size) {
+          hand.push({ ...av, id: `${prefix}_av_${i}`, owner: ownerVal });
+        }
+      });
+
+      if (nonAvatars.length > 0) {
+        while (hand.length < size) {
+          const card = nonAvatars[Math.floor(Math.random() * nonAvatars.length)];
+          hand.push({ ...card, id: `${prefix}_${hand.length}`, owner: ownerVal });
+        }
+      } else {
+        while (hand.length < size) {
+          const card = pool[Math.floor(Math.random() * pool.length)];
+          hand.push({ ...card, id: `${prefix}_${hand.length}`, owner: ownerVal });
+        }
+      }
+      return hand.sort(() => Math.random() - 0.5);
+    };
+
+    const fullHand = buildHand(baseDeck, DECK_TOTAL, r, owner);
     setMyHand(fullHand);              // all 13 visible at once
     setOpponentHandCount(DECK_TOTAL); // show 13 face-down cards for opponent
     setGameResult(null);
   };
+
 
   const handleConnection = (conn, r) => {
     roleRef.current = r;
