@@ -321,17 +321,18 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
-  border-radius: 4px;
+  border-radius: 7px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 5px 20px rgba(0,0,0,0.9);
-  background: #050307;
+  border: 2px solid #2a1b38;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  background: linear-gradient(145deg, #251833, #150d1d);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: grab;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   container-type: inline-size;
+  /* Prevent browser long-press context menu on mobile */
   -webkit-user-select: none;
   user-select: none;
   touch-action: none;
@@ -359,19 +360,17 @@ body {
 .stats {
   position: absolute;
   inset: 0;
-  font-weight: 500;
-  font-family: 'Cinzel', serif;
-  font-size: 38cqw;
-  color: #fff;
-  text-shadow: 0 0 15px #000, 0 0 5px #000;
+  font-weight: bold;
+  font-family: 'Playfair Display', serif;
+  font-size: 22cqw;
+  text-shadow: 2px 2px 4px #000, 0 0 8px #000;
   pointer-events: none;
-  letter-spacing: -2px;
 }
 .stats span { position: absolute; }
-.t { top: 2%;    left: 50%; transform: translateX(-50%); }
-.b { bottom: 25%; left: 50%; transform: translateX(-50%); }
-.l { left: 5%;   top:  50%; transform: translateY(-50%); }
-.r { right: 5%;  top:  50%; transform: translateY(-50%); }
+.t { top: 6%;    left: 50%; transform: translateX(-50%); }
+.b { bottom: 22%; left: 50%; transform: translateX(-50%); }
+.l { left: 6%;   top:  50%; transform: translateY(-50%); }
+.r { right: 6%;  top:  50%; transform: translateY(-50%); }
 
 /* Element icons */
 .element-icon {
@@ -394,17 +393,15 @@ body {
 .name-plate {
   position: absolute;
   bottom: 0;
-  width: calc(100% - 8px);
-  margin: 4px;
-  padding: 2px 0;
-  background: rgba(0, 0, 0, 0.4);
-  color: #f1c40f;
-  font-size: 13cqw;
+  width: 100%;
+  padding: 3px 0;
+  background: rgba(0,0,0,0.85);
+  color: #d4af37;
+  font-size: 14cqw;
   text-align: center;
-  border-top: 1px solid rgba(241, 196, 15, 0.5);
-  border-bottom: 1px solid rgba(241, 196, 15, 0.5);
+  border-top: 1px solid rgba(212, 175, 55, 0.25);
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
 }
 
 /* ═══════════════════════════════════════════════
