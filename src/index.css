@@ -304,14 +304,14 @@ body {
   display: grid;
   grid-template-columns: repeat(3, var(--card-w));
   grid-template-rows:    repeat(3, var(--card-h));
-  gap: 12px;
-  padding: 16px;
-  background: rgba(10, 10, 20, 0.7);
+  gap: 16px;
+  padding: 24px;
+  background: #08060c;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 
-    inset 0 0 40px rgba(0,0,0,0.9),
-    0 20px 50px rgba(0,0,0,0.5);
+    inset 0 0 60px rgba(0,0,0,1),
+    0 30px 60px rgba(0,0,0,0.6);
 }
 
 /* ═══════════════════════════════════════════════
@@ -321,11 +321,11 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-  background: #0f0b15;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.9);
+  background: #050307;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -359,18 +359,19 @@ body {
 .stats {
   position: absolute;
   inset: 0;
-  font-weight: bold;
+  font-weight: 500;
   font-family: 'Cinzel', serif;
-  font-size: 26cqw;
-  color: #f0f0f0;
-  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+  font-size: 38cqw;
+  color: #fff;
+  text-shadow: 0 0 15px #000, 0 0 5px #000;
   pointer-events: none;
+  letter-spacing: -2px;
 }
 .stats span { position: absolute; }
-.t { top: 5%;    left: 50%; transform: translateX(-50%); }
-.b { bottom: 24%; left: 50%; transform: translateX(-50%); }
-.l { left: 8%;   top:  50%; transform: translateY(-50%); }
-.r { right: 8%;  top:  50%; transform: translateY(-50%); }
+.t { top: 2%;    left: 50%; transform: translateX(-50%); }
+.b { bottom: 25%; left: 50%; transform: translateX(-50%); }
+.l { left: 5%;   top:  50%; transform: translateY(-50%); }
+.r { right: 5%;  top:  50%; transform: translateY(-50%); }
 
 /* Element icons */
 .element-icon {
@@ -393,31 +394,31 @@ body {
 .name-plate {
   position: absolute;
   bottom: 0;
-  width: calc(100% - 4px);
-  margin: 2px;
-  padding: 4px 0;
-  background: rgba(0, 0, 0, 0.6);
-  color: #e5c100;
-  font-size: 14cqw;
+  width: calc(100% - 8px);
+  margin: 4px;
+  padding: 2px 0;
+  background: rgba(0, 0, 0, 0.4);
+  color: #f1c40f;
+  font-size: 13cqw;
   text-align: center;
-  border: 1px solid rgba(229, 193, 0, 0.4);
-  border-radius: 2px;
+  border-top: 1px solid rgba(241, 196, 15, 0.5);
+  border-bottom: 1px solid rgba(241, 196, 15, 0.5);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
 }
 
 /* ═══════════════════════════════════════════════
    BOARD CELL
 ═══════════════════════════════════════════════ */
 .cell {
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: all 0.2s;
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 20px rgba(0,0,0,1);
   position: relative;
 }
 .cell.hover {
