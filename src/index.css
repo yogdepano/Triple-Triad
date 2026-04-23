@@ -304,12 +304,14 @@ body {
   display: grid;
   grid-template-columns: repeat(3, var(--card-w));
   grid-template-rows:    repeat(3, var(--card-h));
-  gap: 10px;
+  gap: 12px;
   padding: 16px;
-  background: rgba(5,5,10,0.45);
-  border-radius: 10px;
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 0 30px rgba(60, 42, 85, 0.25);
+  background: rgba(10, 10, 20, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    inset 0 0 40px rgba(0,0,0,0.9),
+    0 20px 50px rgba(0,0,0,0.5);
 }
 
 /* ═══════════════════════════════════════════════
@@ -319,18 +321,17 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
-  border-radius: 7px;
+  border-radius: 6px;
   overflow: hidden;
-  border: 2px solid #2a1b38;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  background: linear-gradient(145deg, #251833, #150d1d);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+  background: #0f0b15;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: grab;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   container-type: inline-size;
-  /* Prevent browser long-press context menu on mobile */
   -webkit-user-select: none;
   user-select: none;
   touch-action: none;
@@ -359,16 +360,17 @@ body {
   position: absolute;
   inset: 0;
   font-weight: bold;
-  font-family: 'Playfair Display', serif;
-  font-size: 22cqw;
-  text-shadow: 2px 2px 4px #000, 0 0 8px #000;
+  font-family: 'Cinzel', serif;
+  font-size: 26cqw;
+  color: #f0f0f0;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8);
   pointer-events: none;
 }
 .stats span { position: absolute; }
-.t { top: 6%;    left: 50%; transform: translateX(-50%); }
-.b { bottom: 22%; left: 50%; transform: translateX(-50%); }
-.l { left: 6%;   top:  50%; transform: translateY(-50%); }
-.r { right: 6%;  top:  50%; transform: translateY(-50%); }
+.t { top: 5%;    left: 50%; transform: translateX(-50%); }
+.b { bottom: 24%; left: 50%; transform: translateX(-50%); }
+.l { left: 8%;   top:  50%; transform: translateY(-50%); }
+.r { right: 8%;  top:  50%; transform: translateY(-50%); }
 
 /* Element icons */
 .element-icon {
@@ -391,28 +393,31 @@ body {
 .name-plate {
   position: absolute;
   bottom: 0;
-  width: 100%;
-  padding: 3px 0;
-  background: rgba(0,0,0,0.85);
-  color: #d4af37;
+  width: calc(100% - 4px);
+  margin: 2px;
+  padding: 4px 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #e5c100;
   font-size: 14cqw;
   text-align: center;
-  border-top: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid rgba(229, 193, 0, 0.4);
+  border-radius: 2px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 /* ═══════════════════════════════════════════════
    BOARD CELL
 ═══════════════════════════════════════════════ */
 .cell {
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.25s;
-  background: rgba(255,255,255,0.015);
+  transition: all 0.2s;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
   position: relative;
 }
 .cell.hover {

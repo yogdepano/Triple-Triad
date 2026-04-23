@@ -123,9 +123,16 @@ export default function MultiplayerArena({
 
   const peerInstance     = useRef(null);
   const roleRef          = useRef(null);
+  const statusRef        = useRef(status);
   const arenaRulesRef    = useRef(propsRules);
   const boardElementsRef = useRef(Array(BOARD_SIZE).fill(null));
 
+  // Sync statusRef
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  // Keep arenaRules synced to prop unless locked to host
   useEffect(() => {
     if (!rulesLocked) {
       setArenaRules(propsRules);
@@ -133,6 +140,26 @@ export default function MultiplayerArena({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchConfig, rulesLocked]);
+
+  // Cleanup peer on unmount
+  useEffect(() => {
+    return () => {
+      if (peerInstance.current) {
+        console.log('MultiplayerArena: Cleaning up peer instance');
+        peerInstance.current.destroy();
+      }
+    };
+  }, []);
+
+  const cleanupExistingPeer = () => {
+    if (peerInstance.current) {
+      peerInstance.current.off('open');
+      peerInstance.current.off('connection');
+      peerInstance.current.off('error');
+      peerInstance.current.destroy();
+      peerInstance.current = null;
+    }
+  };
 
   const getMyOwner = r => r === 'host' ? 'player1' : 'player2';
   const myOwner    = getMyOwner(role);
@@ -227,20 +254,87 @@ export default function MultiplayerArena({
   };
 
   const createRoom = () => {
-    setStatus('waiting');
-    const peer = new Peer();
-    peer.on('open', id => setPeerId(id));
-    peer.on('connection', conn => handleConnection(conn, 'host'));
-    peerInstance.current = peer;
+    try {
+      cleanupExistingPeer();
+      setStatus('waiting');
+      const peer = new Peer();
+      peerInstance.current = peer;
+
+      peer.on('open', id => setPeerId(id));
+      peer.on('error', err => {
+        console.error('MultiplayerArena: Peer error:', err);
+        setStatus('lobby');
+        alert('Peer error: ' + err.type);
+      });
+      peer.on('connection', conn => handleConnection(conn, 'host'));
+    } catch (err) {
+      console.error('MultiplayerArena: Error in createRoom:', err);
+      setStatus('lobby');
+    }
   };
 
   const joinRoom = () => {
-    const peer = new Peer();
-    peer.on('open', () => {
-      const conn = peer.connect(targetId);
-      conn.on('open', () => handleConnection(conn, 'guest'));
-    });
-    peerInstance.current = peer;
+    const tid = targetId?.trim();
+    if (!tid) {
+      alert('Please enter a host code.');
+      return;
+    }
+
+    try {
+      cleanupExistingPeer();
+      setStatus('connecting');
+      
+      const peer = new Peer();
+      peerInstance.current = peer;
+
+      // Connection timeout
+      const timeout = setTimeout(() => {
+        if (statusRef.current === 'connecting') {
+          console.error('MultiplayerArena: Join timeout');
+          cleanupExistingPeer();
+          setStatus('lobby');
+          alert('Connection timed out. The host might be offline or the code is incorrect.');
+        }
+      }, 15000); // 15s timeout
+
+      peer.on('open', () => {
+        console.log('MultiplayerArena: Guest peer open, connecting to:', tid);
+        const conn = peer.connect(tid);
+        
+        conn.on('open', () => {
+          clearTimeout(timeout);
+          handleConnection(conn, 'guest');
+        });
+
+        conn.on('error', err => {
+          clearTimeout(timeout);
+          console.error('MultiplayerArena: Guest conn error:', err);
+          cleanupExistingPeer();
+          setStatus('lobby');
+          alert('Failed to connect to host. Check the code.');
+        });
+      });
+
+      peer.on('error', err => {
+        clearTimeout(timeout);
+        console.error('MultiplayerArena: Guest peer error:', err);
+        cleanupExistingPeer();
+        setStatus('lobby');
+        if (err.type === 'peer-not-found') {
+          alert('Host not found. Check the code.');
+        } else {
+          alert('Could not initialize network. Try again.');
+        }
+      });
+    } catch (err) {
+      console.error('MultiplayerArena: Error in joinRoom:', err);
+      setStatus('lobby');
+    }
+  };
+
+  const cancelConnection = () => {
+    cleanupExistingPeer();
+    setStatus('lobby');
   };
 
   // BUG FIX #2 — no deck refill; just remove the played card from the full hand
@@ -319,15 +413,25 @@ export default function MultiplayerArena({
   // ════════════════════════════════════════════════════════════════
   // WAITING
   // ════════════════════════════════════════════════════════════════
-  if (status === 'waiting') {
+  if (status === 'waiting' || status === 'connecting') {
     return (
       <div className="spire-wrapper" style={{ flexDirection: 'column', gap: '20px' }}>
-        <h2 style={{ color: 'gray' }}>Waiting for opponent...</h2>
-        <div style={{ fontSize: '2rem', padding: '20px', border: '1px dashed var(--player-color)', borderRadius: '10px', letterSpacing: '4px' }}>
-          {peerId || 'Generating...'}
-        </div>
-        <p>Send this code to your opponent.</p>
+        <h2 style={{ color: 'gray' }}>{status === 'waiting' ? 'Waiting for opponent...' : 'Connecting to host...'}</h2>
+        {status === 'waiting' && (
+          <div style={{ fontSize: '2rem', padding: '20px', border: '1px dashed var(--player-color)', borderRadius: '10px', letterSpacing: '4px' }}>
+            {peerId || 'Generating...'}
+          </div>
+        )}
+        <p>{status === 'waiting' ? 'Send this code to your opponent.' : 'Establishing secure link...'}</p>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Active rules will be sent to them on connect.</p>
+        
+        <button 
+          className="mode-toggle-btn" 
+          onClick={cancelConnection}
+          style={{ marginTop: '20px', padding: '10px 20px', fontSize: '0.9rem', opacity: 0.7 }}
+        >
+          CANCEL
+        </button>
       </div>
     );
   }

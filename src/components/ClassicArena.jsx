@@ -119,8 +119,14 @@ export default function ClassicArena({
 
   const peerInstance     = useRef(null);
   const roleRef          = useRef(null);
+  const statusRef        = useRef(status);
   const arenaRulesRef    = useRef(propsRules);
   const boardElementsRef = useRef(Array(BOARD_SIZE).fill(null));
+
+  // Sync statusRef
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   // Keep arenaRules synced to prop unless locked to host
   useEffect(() => {
@@ -129,6 +135,26 @@ export default function ClassicArena({
       arenaRulesRef.current = propsRules;
     }
   }, [matchConfig, rulesLocked]);
+
+  // Cleanup peer on unmount
+  useEffect(() => {
+    return () => {
+      if (peerInstance.current) {
+        console.log('ClassicArena: Cleaning up peer instance');
+        peerInstance.current.destroy();
+      }
+    };
+  }, []);
+
+  const cleanupExistingPeer = () => {
+    if (peerInstance.current) {
+      peerInstance.current.off('open');
+      peerInstance.current.off('connection');
+      peerInstance.current.off('error');
+      peerInstance.current.destroy();
+      peerInstance.current = null;
+    }
+  };
 
   const getMyOwner = r => r === 'host' ? 'player1' : 'player2';
   const myOwner    = getMyOwner(role);
@@ -224,43 +250,90 @@ export default function ClassicArena({
 
   const createRoom = () => {
     try {
+      cleanupExistingPeer();
       setStatus('waiting');
       const peer = new Peer();
-      peer.on('open', id => setPeerId(id));
-      peer.on('error', err => console.error('ClassicArena: Peer error:', err));
-      peer.on('connection', conn => handleConnection(conn, 'host'));
       peerInstance.current = peer;
+
+      peer.on('open', id => setPeerId(id));
+      peer.on('error', err => {
+        console.error('ClassicArena: Peer error:', err);
+        if (err.type === 'network') {
+          alert('Network error. Check your connection.');
+        } else {
+          alert('Peer error: ' + err.type);
+        }
+        setStatus('lobby');
+      });
+      peer.on('connection', conn => handleConnection(conn, 'host'));
     } catch (err) {
       console.error('ClassicArena: Error in createRoom:', err);
+      setStatus('lobby');
     }
   };
 
   const joinRoom = () => {
-    if (!targetId) return;
+    const tid = targetId?.trim();
+    if (!tid) {
+      alert('Please enter a host code.');
+      return;
+    }
+    
     try {
+      cleanupExistingPeer();
       setStatus('connecting');
+      
       const peer = new Peer();
       peerInstance.current = peer;
+
+      // Connection timeout
+      const timeout = setTimeout(() => {
+        if (statusRef.current === 'connecting') {
+          console.error('ClassicArena: Join timeout');
+          cleanupExistingPeer();
+          setStatus('lobby');
+          alert('Connection timed out. The host might be offline or the code is incorrect.');
+        }
+      }, 15000); // 15s timeout
       
       peer.on('open', id => {
-        const conn = peer.connect(targetId);
-        conn.on('open', () => handleConnection(conn, 'guest'));
+        console.log('ClassicArena: Guest peer open, connecting to:', tid);
+        const conn = peer.connect(tid);
+        
+        conn.on('open', () => {
+          clearTimeout(timeout);
+          handleConnection(conn, 'guest');
+        });
+        
         conn.on('error', err => {
+          clearTimeout(timeout);
           console.error('ClassicArena: Guest conn error:', err);
+          cleanupExistingPeer();
           setStatus('lobby');
-          alert('Failed to connect to host. Check the code.');
+          alert('Failed to connect to host. Check the code and try again.');
         });
       });
 
       peer.on('error', err => {
+        clearTimeout(timeout);
         console.error('ClassicArena: Guest peer error:', err);
+        cleanupExistingPeer();
         setStatus('lobby');
-        alert('Could not initialize network. Try again.');
+        if (err.type === 'peer-not-found') {
+          alert('Host not found. Check the code.');
+        } else {
+          alert('Could not initialize network. Try again.');
+        }
       });
     } catch (err) {
       console.error('ClassicArena: Error in joinRoom:', err);
       setStatus('lobby');
     }
+  };
+
+  const cancelConnection = () => {
+    cleanupExistingPeer();
+    setStatus('lobby');
   };
 
   const resetMatch = () => {
@@ -376,6 +449,14 @@ export default function ClassicArena({
         )}
         <p>{status === 'waiting' ? 'Send this code to your opponent.' : 'Establishing secure link...'}</p>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Active rules will be synced on connect.</p>
+        
+        <button 
+          className="mode-toggle-btn" 
+          onClick={cancelConnection}
+          style={{ marginTop: '20px', padding: '10px 20px', fontSize: '0.9rem', opacity: 0.7 }}
+        >
+          CANCEL
+        </button>
       </div>
     );
   }
@@ -407,15 +488,14 @@ export default function ClassicArena({
 
         {/* ── Three-column layout: opponent | board | player ── */}
         <div className="game-row">
-
-          {/* Opponent hand — face down */}
-          <div className="opponent-column">
-            <div style={{ color: 'var(--opponent-color)', fontSize: '0.6rem', fontFamily: 'Cinzel', marginBottom: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-              {isMyTurn ? 'WAITING' : "OPP TURN"}
+          {/* Player hand */}
+          <div className="player-column">
+            <div style={{ color: 'var(--player-color)', fontSize: '0.6rem', fontFamily: 'Cinzel', marginBottom: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+              {isMyTurn ? 'YOUR TURN' : 'PLEASE WAIT'}
             </div>
-            {opponentHand.map((_, i) => (
-              <div key={i} className="hand-card-slot">
-                <div className="tt-card opponent hidden-card" style={{ width: '100%', height: '100%' }}>?</div>
+            {myHand.map(c => (
+              <div key={c.id} className="hand-card-slot">
+                <DraggableCard card={c} disabled={!isMyTurn || !!gameResult} myOwner={myOwner} />
               </div>
             ))}
           </div>
@@ -447,14 +527,14 @@ export default function ClassicArena({
             )}
           </div>
 
-          {/* Player hand */}
-          <div className="player-column">
-            <div style={{ color: 'var(--player-color)', fontSize: '0.6rem', fontFamily: 'Cinzel', marginBottom: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-              {isMyTurn ? 'YOUR TURN' : 'PLEASE WAIT'}
+          {/* Opponent hand — face down */}
+          <div className="opponent-column">
+            <div style={{ color: 'var(--opponent-color)', fontSize: '0.6rem', fontFamily: 'Cinzel', marginBottom: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+              {isMyTurn ? 'WAITING' : "OPP TURN"}
             </div>
-            {myHand.map(c => (
-              <div key={c.id} className="hand-card-slot">
-                <DraggableCard card={c} disabled={!isMyTurn || !!gameResult} myOwner={myOwner} />
+            {opponentHand.map((_, i) => (
+              <div key={i} className="hand-card-slot">
+                <div className="tt-card opponent hidden-card" style={{ width: '100%', height: '100%' }}>?</div>
               </div>
             ))}
           </div>
