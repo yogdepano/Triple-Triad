@@ -299,20 +299,34 @@ body {
 .score-sep    { color: rgba(255,255,255,0.25); font-size: 0.9rem; }
 .turn-label   { color: rgba(255,255,255,0.35); font-size: 0.65rem; letter-spacing: 1px; margin-left: 6px; }
 
-/* 3×3 Grid */
+/* 3×3 Cyberpunk Grid */
 .board.grid-3x3 {
   display: grid;
   grid-template-columns: repeat(3, var(--card-w));
   grid-template-rows:    repeat(3, var(--card-h));
-  gap: 16px;
-  padding: 24px;
-  background: #08060c;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 20px;
+  padding: 30px;
+  background: #050508;
+  border: 2px solid;
+  border-image: linear-gradient(to right, #00f2ff, #7d00ff, #ff00c1) 1;
+  position: relative;
   box-shadow: 
-    inset 0 0 60px rgba(0,0,0,1),
-    0 30px 60px rgba(0,0,0,0.6);
+    0 0 40px rgba(0, 242, 255, 0.15),
+    0 0 40px rgba(255, 0, 193, 0.15),
+    inset 0 0 30px rgba(0,0,0,1);
 }
+/* Tech notches for the board */
+.board.grid-3x3::before,
+.board.grid-3x3::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #00f2ff;
+  pointer-events: none;
+}
+.board.grid-3x3::before { top: -6px; left: -6px; border-right: 0; border-bottom: 0; }
+.board.grid-3x3::after  { bottom: -6px; right: -6px; border-left: 0; border-top: 0; border-color: #ff00c1; }
 
 /* ═══════════════════════════════════════════════
    CARD
@@ -408,20 +422,32 @@ body {
    BOARD CELL
 ═══════════════════════════════════════════════ */
 .cell {
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.2s;
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 0 20px rgba(0,0,0,1);
+  transition: all 0.3s;
+  background: rgba(10, 10, 15, 0.8);
   position: relative;
+  box-shadow: inset 0 0 15px rgba(0, 242, 255, 0.05);
+}
+.cell::before {
+  content: '+';
+  position: absolute;
+  font-family: monospace;
+  font-size: 1.2rem;
+  color: rgba(0, 242, 255, 0.15);
+  opacity: 0.5;
+}
+.cell:nth-child(3n)::before,
+.cell:nth-child(n+7)::before {
+  color: rgba(255, 0, 193, 0.15);
 }
 .cell.hover {
-  border-color: var(--player-color);
-  background: rgba(74, 144, 226, 0.1);
-  box-shadow: 0 0 14px var(--player-color);
+  border-color: #00f2ff;
+  background: rgba(0, 242, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
 }
 
 /* ═══════════════════════════════════════════════
