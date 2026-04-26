@@ -229,6 +229,7 @@ body {
   border: 2px solid #2a1b38; background: #150d1d;
   cursor: grab;
   transition: box-shadow 0.2s, border-color 0.2s;
+  container-type: inline-size;
 }
 .deck-picker-card { cursor: pointer; }
 .tt-card:hover, .deck-picker-card:hover { 
@@ -250,7 +251,7 @@ body {
 
 .stats {
   position: absolute; inset: 0; font-weight: bold; font-family: 'Playfair Display', serif;
-  font-size: 1.6rem; text-shadow: 2px 2px 4px #000; pointer-events: none;
+  font-size: 30cqw; text-shadow: 2px 2px 4px #000; pointer-events: none;
   z-index: 5;
 }
 .stats span { position: absolute; }
@@ -260,8 +261,8 @@ body {
 .r { right: 6%;  top:  50%; transform: translateY(-50%); }
 
 .name-plate {
-  position: absolute; bottom: 0; width: 100%; padding: 3px 0; background: rgba(0,0,0,0.85);
-  color: #d4af37; font-size: 0.65rem; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.25);
+  position: absolute; bottom: 0; width: 100%; padding: 3cqw 0; background: rgba(0,0,0,0.85);
+  color: #d4af37; font-size: 15cqw; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.25);
   z-index: 10;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
@@ -269,6 +270,10 @@ body {
 .cell {
   border: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: center; align-items: center;
   background: rgba(0, 0, 0, 0.05); position: relative; transition: all 0.3s;
+}
+.cell .tt-card {
+  width: 100% !important;
+  height: 100% !important;
 }
 .cell.hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.15); }
 
