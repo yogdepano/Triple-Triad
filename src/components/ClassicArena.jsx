@@ -97,6 +97,7 @@ const DroppableCell = ({ id, card, flashClass, element, myOwner }) => {
 export default function ClassicArena({
   matchConfig = { basicRules: ['basic'], specialRule: null, infectionRule: null },
   setMatchConfig,
+  room = null
 }) {
   const propsRules = [...(matchConfig.basicRules || []), matchConfig.specialRule].filter(Boolean);
 
@@ -128,6 +129,13 @@ export default function ClassicArena({
     statusRef.current = status;
   }, [status]);
 
+  // Auto-join if room prop is provided
+  useEffect(() => {
+    if (room && status === 'lobby') {
+      joinRoom(room);
+    }
+  }, [room, status]);
+
   // Keep arenaRules synced to prop unless locked to host
   useEffect(() => {
     if (!rulesLocked) {
@@ -135,6 +143,12 @@ export default function ClassicArena({
       arenaRulesRef.current = propsRules;
     }
   }, [matchConfig, rulesLocked]);
+
+  useEffect(() => {
+    if (room && status === 'lobby') {
+      joinRoom(room);
+    }
+  }, [room, status]);
 
   // Cleanup peer on unmount
   useEffect(() => {
@@ -272,8 +286,8 @@ export default function ClassicArena({
     }
   };
 
-  const joinRoom = () => {
-    const tid = targetId?.trim();
+  const joinRoom = (overrideId = null) => {
+    const tid = (overrideId || targetId)?.trim();
     if (!tid) {
       alert('Please enter a host code.');
       return;
@@ -443,9 +457,18 @@ export default function ClassicArena({
       <div className="spire-wrapper" style={{ flexDirection: 'column', gap: '20px' }}>
         <h2 style={{ color: 'gray' }}>{status === 'waiting' ? 'Waiting for opponent...' : 'Connecting to host...'}</h2>
         {status === 'waiting' && (
-          <div style={{ fontSize: '2rem', padding: '20px', border: '1px dashed var(--player-color)', borderRadius: '10px', letterSpacing: '4px' }}>
-            {peerId || 'Generating...'}
-          </div>
+          <>
+            <div style={{ fontSize: '2rem', padding: '20px', border: '1px dashed var(--player-color)', borderRadius: '10px', letterSpacing: '4px' }}>
+              {peerId || 'Generating...'}
+            </div>
+            <button className="copy-link-btn" onClick={() => {
+              const url = `${window.location.origin}${window.location.pathname}?m=classic_online&room=${peerId}`;
+              navigator.clipboard.writeText(url);
+              alert('Join link copied to clipboard!');
+            }}>
+              COPY JOIN LINK
+            </button>
+          </>
         )}
         <p>{status === 'waiting' ? 'Send this code to your opponent.' : 'Establishing secure link...'}</p>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Active rules will be synced on connect.</p>

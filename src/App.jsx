@@ -42,7 +42,24 @@ function RuleDropdown({ id, value, label, exclude = [], onChange, disabled = fal
 function App() {
   const [currentMode, setCurrentMode] = useState('classic');
   const [gameKey,     setGameKey]     = useState(0);
-  const [rulesOpen,   setRulesOpen]   = useState(false);
+  const [initialRoom, setInitialRoom] = useState(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room');
+    const mode = params.get('m');
+    
+    if (room) {
+      setInitialRoom(room);
+      if (mode === 'multiplayer') {
+        setCurrentMode('multiplayer');
+      } else {
+        setCurrentMode('classic_online');
+      }
+      // Clean up URL without refreshing
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const [matchConfig, setMatchConfig] = useState({
     basicRules: ['basic', null],
@@ -73,7 +90,7 @@ function App() {
   };
 
   const handleReset = () => setGameKey(k => k + 1);
-  const switchMode  = (mode) => { setCurrentMode(mode); setGameKey(k => k + 1); setRulesOpen(false); };
+  const switchMode  = (mode) => { setCurrentMode(mode); setGameKey(k => k + 1); };
 
   const [b1, b2] = matchConfig.basicRules;
   const sp = matchConfig.specialRule;
@@ -100,38 +117,18 @@ function App() {
           <button className={currentMode === 'adventure'      ? 'active' : ''} onClick={() => switchMode('adventure')}>⚔ Quest</button>
         </div>
 
-        {/* Desktop: inline rules panel */}
-        <div className="header-right desktop-rules">
+        {/* Desktop Rules (Always Visible) */}
+        <div className="header-right">
           {rulesPanel}
           <button className="reset-btn" onClick={handleReset}>↺ Reset</button>
         </div>
-
-        {/* Mobile: gear toggle + reset */}
-        <div className="header-right mobile-controls">
-          <button className="reset-btn" onClick={handleReset}>↺</button>
-          <button
-            id="rules-toggle-btn"
-            className={`rules-toggle-btn ${rulesOpen ? 'active' : ''}`}
-            onClick={() => setRulesOpen(o => !o)}
-            aria-label="Toggle rules"
-          >
-            ⚙
-          </button>
-        </div>
       </header>
-
-      {/* Mobile rules drawer */}
-      {rulesOpen && (
-        <div className="mobile-rules-drawer">
-          {rulesPanel}
-        </div>
-      )}
 
       <main className="app-main">
         {currentMode === 'classic'        && <GameBoard       key={gameKey} matchConfig={cfg} onReset={handleReset} />}
-        {currentMode === 'classic_online' && <ClassicArena               matchConfig={cfg} setMatchConfig={setMatchConfig} />}
+        {currentMode === 'classic_online' && <ClassicArena               matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
         {currentMode === 'raid'           && <WorldBossRaid   key={gameKey} matchConfig={cfg} />}
-        {currentMode === 'multiplayer'    && <MultiplayerArena            matchConfig={cfg} setMatchConfig={setMatchConfig} />}
+        {currentMode === 'multiplayer'    && <MultiplayerArena            matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
         {currentMode === 'adventure'      && <AdventureMap />}
       </main>
     </div>

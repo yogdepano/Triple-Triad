@@ -100,6 +100,7 @@ const DroppableCell = ({ id, card, flashClass, element, myOwner }) => {
 export default function MultiplayerArena({
   matchConfig = { basicRules: ['basic'], specialRule: null, infectionRule: null },
   setMatchConfig,
+  room = null
 }) {
   const propsRules = [...(matchConfig.basicRules || []), matchConfig.specialRule].filter(Boolean);
 
@@ -131,6 +132,12 @@ export default function MultiplayerArena({
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
+
+  useEffect(() => {
+    if (room && status === 'lobby') {
+      joinRoom(room);
+    }
+  }, [room, status]);
 
   // Keep arenaRules synced to prop unless locked to host
   useEffect(() => {
@@ -300,8 +307,8 @@ export default function MultiplayerArena({
     }
   };
 
-  const joinRoom = () => {
-    const tid = targetId?.trim();
+  const joinRoom = (overrideId = null) => {
+    const tid = (overrideId || targetId)?.trim();
     if (!tid) {
       alert('Please enter a host code.');
       return;
@@ -445,9 +452,18 @@ export default function MultiplayerArena({
       <div className="spire-wrapper" style={{ flexDirection: 'column', gap: '20px' }}>
         <h2 style={{ color: 'gray' }}>{status === 'waiting' ? 'Waiting for opponent...' : 'Connecting to host...'}</h2>
         {status === 'waiting' && (
-          <div style={{ fontSize: '2rem', padding: '20px', border: '1px dashed var(--player-color)', borderRadius: '10px', letterSpacing: '4px' }}>
-            {peerId || 'Generating...'}
-          </div>
+          <>
+            <div style={{ fontSize: '2rem', padding: '20px', border: '1px dashed var(--player-color)', borderRadius: '10px', letterSpacing: '4px' }}>
+              {peerId || 'Generating...'}
+            </div>
+            <button className="copy-link-btn" onClick={() => {
+              const url = `${window.location.origin}${window.location.pathname}?m=multiplayer&room=${peerId}`;
+              navigator.clipboard.writeText(url);
+              alert('Join link copied to clipboard!');
+            }}>
+              COPY JOIN LINK
+            </button>
+          </>
         )}
         <p>{status === 'waiting' ? 'Send this code to your opponent.' : 'Establishing secure link...'}</p>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Active rules will be sent to them on connect.</p>
