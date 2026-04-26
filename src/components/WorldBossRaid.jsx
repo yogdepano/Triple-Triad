@@ -178,14 +178,14 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
         <div className="side-column boss-align">
           <div className="slot-container" style={{ opacity: currentTurn === 'boss1' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column' }}>
             <div style={{color:'var(--opponent-color)', fontWeight:'bold'}}>Boss Deck 1 ({boss1Hand.length})</div>
-            <div className="mini-hand boss-stack">
-               {boss1Hand.slice(0,1).map(c => <div key={c.id} className="tt-card boss1 hidden-card">?</div>)}
+            <div className="mini-hand" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px', width: '100%' }}>
+               {boss1Hand.slice(0,2).map((c, i) => <div key={c.id} className="tt-card boss1 hidden-card" style={{ width: '100%', height: 'var(--card-h)' }}>?</div>)}
             </div>
           </div>
           <div className="slot-container" style={{ opacity: currentTurn === 'boss2' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column' }}>
             <div style={{color:'var(--opponent-color)', fontWeight:'bold'}}>Boss Deck 2 ({boss2Hand.length})</div>
-            <div className="mini-hand boss-stack">
-               {boss2Hand.slice(0,1).map(c => <div key={c.id} className="tt-card boss2 hidden-card">?</div>)}
+            <div className="mini-hand" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px', width: '100%' }}>
+               {boss2Hand.slice(0,2).map((c, i) => <div key={c.id} className="tt-card boss2 hidden-card" style={{ width: '100%', height: 'var(--card-h)' }}>?</div>)}
             </div>
           </div>
         </div>
@@ -216,14 +216,22 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
         <div className="side-column player-align">
           <div className="slot-container" style={{ opacity: currentTurn === 'activeA' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column' }}>
             <div style={{color:'var(--player-color)', fontWeight:'bold'}}>Player {activeIndexA + 1}</div>
-            <div className="mini-hand player-stack">
-               {activeHandA.map(c => <DraggableCard key={c.id} card={c} disabled={currentTurn !== 'activeA'} />)}
+            <div className="mini-hand" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px', width: '100%' }}>
+               {activeHandA.map(c => (
+                 <div key={c.id} style={{ width: '100%', height: 'var(--card-h)' }}>
+                   <DraggableCard card={c} disabled={currentTurn !== 'activeA'} />
+                 </div>
+               ))}
             </div>
           </div>
           <div className="slot-container" style={{ opacity: currentTurn === 'activeB' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column' }}>
             <div style={{color:'var(--player-color)', fontWeight:'bold'}}>Player {activeIndexB + 1}</div>
-            <div className="mini-hand player-stack">
-               {activeHandB.map(c => <DraggableCard key={c.id} card={c} disabled={currentTurn !== 'activeB'} />)}
+            <div className="mini-hand" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px', width: '100%' }}>
+               {activeHandB.map(c => (
+                 <div key={c.id} style={{ width: '100%', height: 'var(--card-h)' }}>
+                   <DraggableCard card={c} disabled={currentTurn !== 'activeB'} />
+                 </div>
+               ))}
             </div>
           </div>
         </div>
