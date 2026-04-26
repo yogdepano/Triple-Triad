@@ -214,7 +214,7 @@ body {
   grid-template-rows:    repeat(3, var(--card-h));
   gap: 20px;
   padding: 40px;
-  background: #050508;
+  background: #dcdcdc;
   border: 2px solid;
   border-image: linear-gradient(to right, #00f2ff, #7d00ff, #ff00c1) 1;
   position: relative;
@@ -228,12 +228,18 @@ body {
   width: var(--card-w); height: var(--card-h); position: relative; border-radius: 7px; overflow: hidden;
   border: 2px solid #2a1b38; background: #150d1d;
   cursor: grab;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
 .deck-picker-card { cursor: pointer; }
-.tt-card:hover, .deck-picker-card:hover { transform: translateY(-4px); box-shadow: 0 8px 18px rgba(0,0,0,0.7); border-color: #5d457a; }
+.tt-card:hover, .deck-picker-card:hover { 
+  transform: translateY(-4px); 
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.7); 
+  border-color: #5d457a; 
+}
 .tt-card.player1       { border-color: var(--player-color); }
 .tt-card.opponent      { border-color: var(--opponent-color); }
+.tt-card.dragging      { transition: none !important; cursor: grabbing; z-index: 9999; }
 
 .card-bg { 
   position: absolute; inset: 0; 
@@ -262,7 +268,7 @@ body {
 
 .cell {
   border: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: center; align-items: center;
-  background: rgba(0, 0, 0, 0.4); position: relative; transition: all 0.3s;
+  background: rgba(0, 0, 0, 0.05); position: relative; transition: all 0.3s;
 }
 .cell.hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.15); }
 
@@ -308,7 +314,7 @@ body {
 .raid-board-container { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
 .board.grid-5x5, .board.grid-7x7 {
-  display: grid; gap: 8px; padding: 20px; background: rgba(0,0,0,0.6);
+  display: grid; gap: 8px; padding: 20px; background: #dcdcdc;
   border: 1px solid var(--glass-border); height: calc(100vh - var(--header-h) - 100px);
   aspect-ratio: 2 / 3;
 }
