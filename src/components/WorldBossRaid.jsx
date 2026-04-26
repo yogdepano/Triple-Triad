@@ -175,36 +175,36 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
         <button onClick={resetGame} style={{ position: 'absolute', top: '15px', right: '20px', padding: '8px 16px', background: 'transparent', border: '1px solid var(--player-color)', color: 'white', cursor: 'pointer', fontFamily: 'Cinzel', zIndex: 1000}}>Reset Run</button>
 
         {/* Main Area: Boss Decks + Board */}
-        <div className="raid-top-row" style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', gap: '30px', flex: 1 }}>
-          {/* Left Column: Boss Decks */}
-          <div className="side-column boss-align" style={{ width: '200px' }}>
+        <div className="raid-top-row" style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', gap: '20px', flex: 1, minHeight: 0 }}>
+          {/* Left Column: Boss Decks (Compact) */}
+          <div className="side-column boss-align" style={{ width: '140px', minWidth: '140px' }}>
             <div className="slot-container" style={{ opacity: currentTurn === 'boss1' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column' }}>
-              <div style={{color:'var(--opponent-color)', fontWeight:'bold', fontSize: '0.8rem'}}>Boss 1 ({boss1Hand.length})</div>
-              <div className="mini-hand" style={{ display: 'flex', gap: '4px' }}>
-                 {boss1Hand.slice(0,2).map((c, i) => <div key={c.id} className="tt-card boss1 hidden-card" style={{ width: '60px', height: '90px' }}>?</div>)}
+              <div style={{color:'var(--opponent-color)', fontWeight:'bold', fontSize: '0.7rem'}}>Boss 1 ({boss1Hand.length})</div>
+              <div className="mini-hand" style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                 {boss1Hand.slice(0,4).map((c, i) => <div key={c.id} className="tt-card boss1 hidden-card" style={{ width: '40px', height: '60px', fontSize: '10px' }}>?</div>)}
               </div>
             </div>
-            <div className="slot-container" style={{ opacity: currentTurn === 'boss2' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column', marginTop: '20px' }}>
-              <div style={{color:'var(--opponent-color)', fontWeight:'bold', fontSize: '0.8rem'}}>Boss 2 ({boss2Hand.length})</div>
-              <div className="mini-hand" style={{ display: 'flex', gap: '4px' }}>
-                 {boss2Hand.slice(0,2).map((c, i) => <div key={c.id} className="tt-card boss2 hidden-card" style={{ width: '60px', height: '90px' }}>?</div>)}
+            <div className="slot-container" style={{ opacity: currentTurn === 'boss2' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column', marginTop: '15px' }}>
+              <div style={{color:'var(--opponent-color)', fontWeight:'bold', fontSize: '0.7rem'}}>Boss 2 ({boss2Hand.length})</div>
+              <div className="mini-hand" style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                 {boss2Hand.slice(0,4).map((c, i) => <div key={c.id} className="tt-card boss2 hidden-card" style={{ width: '40px', height: '60px', fontSize: '10px' }}>?</div>)}
               </div>
             </div>
           </div>
 
           {/* Center: Board */}
-          <div className="board-container raid-board-container">
-            <div className="board grid-7x7">
+          <div className="board-container raid-board-container" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <div className="board grid-7x7" style={{ height: 'calc(100vh - 240px)' }}>
               {board.map((c, i) => <DroppableCell key={`raid-cell-${i}`} id={`raid-cell-${i}`} card={c} />)}
             </div>
           </div>
         </div>
 
-        {/* Bottom Area: Player Hands Horizontal */}
-        <div className="raid-bottom-row" style={{ display: 'flex', width: '100%', gap: '40px', justifyContent: 'center', padding: '10px', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid var(--glass-border)' }}>
-          <div className="slot-container" style={{ opacity: currentTurn === 'activeA' ? 1 : 0.5, display:'flex', flexDirection:'column', alignItems: 'center' }}>
-            <div style={{color:'var(--player-color)', fontWeight:'bold', fontSize: '0.8rem', marginBottom: '4px'}}>Player {activeIndexA + 1}</div>
-            <div className="mini-hand" style={{ display: 'flex', gap: '8px' }}>
+        {/* Bottom Area: Player Hands Truly Horizontal */}
+        <div className="raid-bottom-row" style={{ display: 'flex', width: '100%', gap: '20px', justifyContent: 'center', padding: '10px 0', background: 'rgba(0,0,0,0.5)', borderTop: '1px solid var(--glass-border)', flexShrink: 0 }}>
+          <div className="slot-container" style={{ opacity: currentTurn === 'activeA' ? 1 : 0.5, display:'flex', alignItems: 'center', gap: '15px' }}>
+            <div style={{color:'var(--player-color)', fontWeight:'bold', fontSize: '0.7rem', writingMode: 'vertical-lr', transform: 'rotate(180deg)'}}>P{activeIndexA + 1}</div>
+            <div className="mini-hand" style={{ display: 'flex', gap: '6px' }}>
                {activeHandA.map(c => (
                  <div key={c.id} style={{ width: 'var(--card-w)', height: 'var(--card-h)' }}>
                    <DraggableCard card={c} disabled={currentTurn !== 'activeA'} />
@@ -212,9 +212,12 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
                ))}
             </div>
           </div>
-          <div className="slot-container" style={{ opacity: currentTurn === 'activeB' ? 1 : 0.5, display:'flex', flexDirection:'column', alignItems: 'center' }}>
-            <div style={{color:'var(--player-color)', fontWeight:'bold', fontSize: '0.8rem', marginBottom: '4px'}}>Player {activeIndexB + 1}</div>
-            <div className="mini-hand" style={{ display: 'flex', gap: '8px' }}>
+          
+          <div style={{ width: '2px', background: 'rgba(255,255,255,0.1)', height: '100%' }} />
+
+          <div className="slot-container" style={{ opacity: currentTurn === 'activeB' ? 1 : 0.5, display:'flex', alignItems: 'center', gap: '15px' }}>
+            <div style={{color:'var(--player-color)', fontWeight:'bold', fontSize: '0.7rem', writingMode: 'vertical-lr', transform: 'rotate(180deg)'}}>P{activeIndexB + 1}</div>
+            <div className="mini-hand" style={{ display: 'flex', gap: '6px' }}>
                {activeHandB.map(c => (
                  <div key={c.id} style={{ width: 'var(--card-w)', height: 'var(--card-h)' }}>
                    <DraggableCard card={c} disabled={currentTurn !== 'activeB'} />
