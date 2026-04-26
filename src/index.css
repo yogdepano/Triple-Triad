@@ -11,11 +11,10 @@
   --opponent-color: #e24a4a;
   --header-h:       56px;
 
-  /* Card dimensions — Responsive and mode-aware */
-  --card-slots: 5;
-  --card-gap:   12px;
-  --game-pad:   24px;
-  --card-h: clamp(80px, calc((100vh - var(--header-h) - var(--game-pad) * 2 - var(--card-gap) * (var(--card-slots) - 1)) / var(--card-slots)), 240px);
+  /* Card dimensions — Optimized for desktop viewing */
+  --card-gap:  16px;
+  --game-pad:  32px;
+  --card-h: clamp(140px, calc((100vh - var(--header-h) - var(--game-pad) * 2 - var(--card-gap) * 4) / 5), 240px);
   --card-w: calc(var(--card-h) * 0.6667);
 }
 
@@ -181,7 +180,7 @@ body {
 .opponent-column {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--card-gap);
   width: var(--card-w);
 }
 
@@ -313,17 +312,15 @@ body {
    RAID / 5×5 ARENA
 ═══════════════════════════════════════════════ */
 .raid-wrapper {
-  display: flex; align-items: center; justify-content: center; gap: 20px;
-  padding: 10px; height: calc(100vh - var(--header-h));
+  display: flex; align-items: center; justify-content: center; gap: 40px;
+  padding: 30px; height: calc(100vh - var(--header-h));
   background: radial-gradient(circle at center, #1a1025 0%, var(--bg-dark) 100%);
-  --card-slots: 8; /* Scale cards down for raid density */
 }
-.raid-wrapper .side-column { gap: 10px; }
 .raid-board-container { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
 .board.grid-5x5, .board.grid-7x7 {
-  display: grid; gap: 8px; padding: 15px; background: #dcdcdc;
-  border: 1px solid var(--glass-border); height: calc(100vh - var(--header-h) - 80px);
+  display: grid; gap: 8px; padding: 20px; background: #dcdcdc;
+  border: 1px solid var(--glass-border); height: calc(100vh - var(--header-h) - 100px);
   aspect-ratio: 2 / 3;
 }
 .board.grid-5x5 { grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); }
