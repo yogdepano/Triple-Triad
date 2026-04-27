@@ -51,7 +51,7 @@ const DroppableCell = ({ id, card }) => {
 
 export default function WorldBossRaid({ activeRules = ['basic'] }) {
   const [board, setBoard] = useState(Array(49).fill(null));
-  const [rosterHands, setRosterHands] = useState(Array(10).fill([]));
+  const [rosterHands, setRosterHands] = useState(Array(6).fill([]));
   const [boss1Hand, setBoss1Hand] = useState([]);
   const [boss2Hand, setBoss2Hand] = useState([]);
   
@@ -103,7 +103,7 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
     const b1 = buildHand(data.opponentDeck, 25, 'b1', 'boss1');
     const b2 = buildHand(data.opponentDeck, 25, 'b2', 'boss2');
     
-    const newRoster = Array(10).fill(null).map((_, pNum) => {
+    const newRoster = Array(6).fill(null).map((_, pNum) => {
         return buildHand(data.playerDeck, 5, `p${pNum}`, `player_${pNum}`);
     });
 
@@ -131,7 +131,7 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
       });
 
       if (placedCard.owner === `player_${activeIndexB}`) {
-         setPairIndex(prev => (prev + 1) % 5);
+         setPairIndex(prev => (prev + 1) % 3);
       }
     } else if (placedCard.owner === 'boss1') {
       setBoss1Hand(prev => prev.filter(c => c.id !== placedCard.id));
