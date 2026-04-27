@@ -215,9 +215,10 @@ body {
   gap: 20px;
   padding: 40px;
   background: url('/assets/board_texture.png') center/cover no-repeat;
-  border: 2px solid;
-  border-image: linear-gradient(to right, #00f2ff, #7d00ff, #ff00c1) 1;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 0 40px rgba(0,0,0,0.5), inset 0 0 100px rgba(0,0,0,0.3);
   position: relative;
+  border-radius: 8px;
   box-shadow: 0 0 60px rgba(0, 242, 255, 0.15);
 }
 
