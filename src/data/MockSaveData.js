@@ -10,7 +10,9 @@ const DEFAULT_SAVE = {
     { name: 'Ifrit',     top: 8, right: 4, bottom: 2, left: 7, element: '🔥', image: '/card_art_placeholder_1776406291061.png' },
     { name: 'Shiva',     top: 6, right: 7, bottom: 8, left: 4, element: '✨',  image: '/card_art_placeholder_1776406291061.png' },
     { name: 'Siren',     top: 3, right: 8, bottom: 4, left: 6, element: '💧', image: '/card_art_placeholder_1776406291061.png' },
-    { name: 'Squall',    top: 'A', right: 9, bottom: 6, left: 'A', element: '✨', isAvatar: true, image: '/card_art_placeholder_1776406291061.png' }
+    { name: 'Squall',    top: 'A', right: 9, bottom: 6, left: 'A', element: '✨', isAvatar: true, image: '/card_art_placeholder_1776406291061.png' },
+    { name: "Knight",   top: 5, right: 4, bottom: 2, left: 3, image: "/assets/card_knight.png", id: "p1_knight", isAvatar: true },
+    { name: "Dragon",   top: 8, right: 4, bottom: 2, left: 7, image: "/assets/card_dragon.png", id: "p1_dragon", isAvatar: true }
   ],
   opponentDeck: [
     { name: 'Slime',     top: 1, right: 1, bottom: 2, left: 1, element: '💧', image: '/card_art_placeholder_1776406291061.png' },

@@ -164,7 +164,7 @@ body {
   justify-content: center;
   height: 100%;
   padding: var(--game-pad);
-  background: radial-gradient(ellipse at center, #1a1025 0%, var(--bg-dark) 100%);
+  background: url('/assets/arena_bg.png') center/cover no-repeat;
   position: relative;
   overflow: hidden;
 }
@@ -214,7 +214,7 @@ body {
   grid-template-rows:    repeat(3, var(--card-h));
   gap: 20px;
   padding: 40px;
-  background: #dcdcdc;
+  background: url('/assets/board_texture.png') center/cover no-repeat;
   border: 2px solid;
   border-image: linear-gradient(to right, #00f2ff, #7d00ff, #ff00c1) 1;
   position: relative;
@@ -314,7 +314,7 @@ body {
 .raid-wrapper {
   display: flex; align-items: center; justify-content: center; gap: 40px;
   padding: 30px; height: calc(100vh - var(--header-h));
-  background: radial-gradient(circle at center, #1a1025 0%, var(--bg-dark) 100%);
+  background: url('/assets/arena_bg.png') center/cover no-repeat;
 }
 .raid-board-container { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
