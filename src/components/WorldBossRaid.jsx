@@ -213,16 +213,16 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
         </div>
 
         {/* Right Column: 10-Player "Tag-Out" Rotation Active Slots */}
-        <div className="side-column player-align">
+        <div className="side-column player-align" style={{ minWidth: 'fit-content', paddingRight: '40px' }}>
           <div className="slot-container" style={{ opacity: currentTurn === 'activeA' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column' }}>
             <div style={{color:'var(--player-color)', fontWeight:'bold'}}>Player {activeIndexA + 1}</div>
-            <div className="mini-hand player-stack">
+            <div className="mini-hand" style={{ display: 'flex', flexDirection: 'row', gap: '10px', marginTop: '10px' }}>
                {activeHandA.map(c => <DraggableCard key={c.id} card={c} disabled={currentTurn !== 'activeA'} />)}
             </div>
           </div>
           <div className="slot-container" style={{ opacity: currentTurn === 'activeB' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column' }}>
             <div style={{color:'var(--player-color)', fontWeight:'bold'}}>Player {activeIndexB + 1}</div>
-            <div className="mini-hand player-stack">
+            <div className="mini-hand" style={{ display: 'flex', flexDirection: 'row', gap: '10px', marginTop: '10px' }}>
                {activeHandB.map(c => <DraggableCard key={c.id} card={c} disabled={currentTurn !== 'activeB'} />)}
             </div>
           </div>
