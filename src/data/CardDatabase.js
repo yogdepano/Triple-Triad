@@ -91,7 +91,9 @@ export function generateCard(rarity = 'COMMON', owner = 'player', overrideName =
   const [top, right, bottom, left] = stats.map(s => s === 10 ? 'A' : s);
   
   let image = `/card_art_placeholder_1776406291061.png`;
-  if (name === 'Squall') image = `/assets/squall.png`;
+  if (BOSS_NAMES.includes(name)) {
+    image = `/assets/${name.toLowerCase()}.png`;
+  }
 
   return {
     id: `${rarity.toLowerCase()}_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
