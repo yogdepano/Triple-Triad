@@ -260,8 +260,8 @@ body {
   box-shadow: 0 8px 18px rgba(0,0,0,0.7); 
   border-color: #5d457a; 
 }
-.tt-card.player1       { border-color: var(--player-color); }
-.tt-card.opponent      { border-color: var(--opponent-color); }
+.tt-card.player1, .tt-card[class*="player_"] { border-color: var(--player-color); }
+.tt-card.opponent, .tt-card[class*="boss"] { border-color: var(--opponent-color); }
 .tt-card.dragging      { transition: none !important; cursor: grabbing; z-index: 9999; }
 
 .card-bg { 
@@ -306,7 +306,21 @@ body {
   0%   { transform: scale(1.12) rotateY(-180deg); opacity: 0; }
   100% { transform: scale(1)    rotateY(0deg);    opacity: 1; }
 }
-.on-board { animation: slam-flip 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+@keyframes flip-glow-player {
+  0%   { box-shadow: 0 0 50px 15px rgba(74, 144, 226, 0.9), inset 0 0 30px 10px rgba(74, 144, 226, 0.8); border-color: #fff; }
+  100% { box-shadow: 0 8px 18px rgba(0,0,0,0.7); border-color: var(--player-color); }
+}
+@keyframes flip-glow-opponent {
+  0%   { box-shadow: 0 0 50px 15px rgba(226, 74, 74, 0.9), inset 0 0 30px 10px rgba(226, 74, 74, 0.8); border-color: #fff; }
+  100% { box-shadow: 0 8px 18px rgba(0,0,0,0.7); border-color: var(--opponent-color); }
+}
+
+.on-board.player1, .on-board[class*="player_"] { 
+  animation: slam-flip 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, flip-glow-player 0.85s ease-out forwards; 
+}
+.on-board.opponent, .on-board[class*="boss"] { 
+  animation: slam-flip 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, flip-glow-opponent 0.85s ease-out forwards; 
+}
 
 @keyframes banner-in {
   from { opacity: 0; transform: scale(0.93); }
@@ -368,7 +382,7 @@ body {
 /* ═══════════════════════════════════════════════
    ADVENTURE MAP
 ═══════════════════════════════════════════════ */
-.adv-wrapper { display: flex; flex-direction: column; height: 100vh; background: #0b0710; }
+.adv-wrapper { display: flex; flex-direction: column; height: 100vh; background: #0b0710; padding-top: var(--header-h); }
 .adv-header  { display: flex; align-items: center; gap: 20px; padding: 10px 24px; background: rgba(18,10,28,0.98); border-bottom: 1px solid rgba(255,255,255,0.1); }
 .adv-map-canvas { flex: 1; position: relative; overflow: hidden; background: url('/adventure_bg.jpg') center/cover; }
 .map-node {
