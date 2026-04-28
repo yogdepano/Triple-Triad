@@ -4,6 +4,7 @@ import ClassicArena from './components/ClassicArena'
 import WorldBossRaid from './components/WorldBossRaid'
 import MultiplayerArena from './components/MultiplayerArena'
 import AdventureMap from './components/AdventureMap'
+import GameBoard5x5 from './components/GameBoard5x5'
 import { RULE_DESCRIPTIONS } from './data/RuleDescriptions'
 
 const ALL_RULES = [
@@ -124,6 +125,7 @@ function App() {
         <div className="mode-selector">
           <select className="mode-dropdown" value={currentMode} onChange={(e) => switchMode(e.target.value)}>
             <option value="classic">3×3 Classic</option>
+            <option value="classic_5x5">5×5 vs AI</option>
             <option value="classic_online">3×3 ⚔ Online</option>
             <option value="multiplayer">5×5 Multiplayer</option>
             <option value="raid">World Boss Raid</option>
@@ -144,6 +146,7 @@ function App() {
 
       <main className="app-main">
         {currentMode === 'classic'        && <GameBoard       key={gameKey} matchConfig={cfg} onReset={handleReset} />}
+        {currentMode === 'classic_5x5'    && <GameBoard5x5    key={gameKey} matchConfig={cfg} onReset={handleReset} />}
         {currentMode === 'classic_online' && <ClassicArena               matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
         {currentMode === 'raid'           && <WorldBossRaid   key={gameKey} matchConfig={cfg} />}
         {currentMode === 'multiplayer'    && <MultiplayerArena            matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
