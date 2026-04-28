@@ -41,31 +41,29 @@ function typeForRow(row) {
  * between rows still hold visually.
  */
 function randomXPositions(n, rng) {
-  const MARGIN  = 0.06;  // min distance from canvas edge
-  const MIN_GAP = 0.10;  // min gap between adjacent nodes in same row
-  const MAX_GAP = 0.38;  // max gap — controls how spread-out a cluster can be
+  const MARGIN = 0.15; // Increased margin to bring nodes closer to the center
 
   if (n === 1) {
-    // Single node: fully free anywhere within margins
-    return [MARGIN + rng() * (1 - 2 * MARGIN)];
+    // Single node: Always exactly in the center (bottleneck/boss)
+    return [0.5];
   }
 
-  // Step 1 — random gaps between the n nodes
-  const gaps = Array.from({ length: n - 1 }, () => MIN_GAP + rng() * (MAX_GAP - MIN_GAP));
-  const totalSpan = gaps.reduce((a, b) => a + b, 0);
+  // Create structured lanes instead of random scattered gaps.
+  const step = (1 - 2 * MARGIN) / (n - 1);
+  const positions = [];
 
-  // Step 2 — random start so the cluster fits within [MARGIN, 1-MARGIN]
-  const room  = (1 - 2 * MARGIN) - totalSpan;
-  const start = room > 0
-    ? MARGIN + rng() * room   // cluster can start anywhere it fits
-    : MARGIN;                  // fallback: pin to left margin if cluster is very wide
+  for (let i = 0; i < n; i++) {
+    // Base position perfectly aligned to a lane
+    let basePos = MARGIN + (i * step);
+    
+    // Add a small amount of random jitter (-3% to +3%) 
+    // so it looks organic but maintains structure
+    let jitter = (rng() * 0.06) - 0.03;
+    
+    positions.push(basePos + jitter);
+  }
 
-  // Step 3 — build sorted positions
-  const positions = [start];
-  gaps.forEach(g => positions.push(positions[positions.length - 1] + g));
-
-  // Clamp to [MARGIN, 1-MARGIN] just in case of floating-point drift
-  return positions.map(p => Math.max(MARGIN, Math.min(1 - MARGIN, p)));
+  return positions;
 }
 
 /**
