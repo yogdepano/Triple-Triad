@@ -9,7 +9,21 @@ import { CSS } from '@dnd-kit/utilities';
 const GRID          = 5;
 const BOARD_SIZE    = GRID * GRID; // 25
 const DECK_TOTAL    = 13;
-const EL_TYPES      = ['💧', '🔥', '🌿', '🪨', '⚡', '✨', '🌑'];
+const EL_TYPES   = ['💧', '🔥', '🌿', '🪨', '⚡', '✨', '🌑'];
+
+// PeerJS robust config to help bypass strict firewalls/NATs
+const PEER_CONFIG = {
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun.stunprotocol.org:3478' }
+    ]
+  }
+};
+
+const DEFAULT_ARENA_RULES = ['basic', 'same', 'plus', 'combo'];
 const SPECIAL_RULES = ['same', 'plus', 'equal'];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -298,7 +312,7 @@ export default function MultiplayerArena({
     try {
       cleanupExistingPeer();
       setStatus('waiting');
-      const peer = new Peer();
+      const peer = new Peer(PEER_CONFIG);
       peerInstance.current = peer;
 
       peer.on('open', id => setPeerId(id));
@@ -325,7 +339,7 @@ export default function MultiplayerArena({
       cleanupExistingPeer();
       setStatus('connecting');
       
-      const peer = new Peer();
+      const peer = new Peer(PEER_CONFIG);
       peerInstance.current = peer;
 
       // Connection timeout
@@ -334,9 +348,9 @@ export default function MultiplayerArena({
           console.error('MultiplayerArena: Join timeout');
           cleanupExistingPeer();
           setStatus('lobby');
-          alert('Connection timed out. The host might be offline or the code is incorrect.');
+          alert('Connection timed out. Firewalls may be blocking the WebRTC handshake, or the host left.');
         }
-      }, 15000); // 15s timeout
+      }, 20000); // 20s timeout
 
       peer.on('open', () => {
         console.log('MultiplayerArena: Guest peer open, connecting to:', tid);
@@ -361,7 +375,7 @@ export default function MultiplayerArena({
         console.error('MultiplayerArena: Guest peer error:', err);
         cleanupExistingPeer();
         setStatus('lobby');
-        if (err.type === 'peer-not-found') {
+        if (err.type === 'peer-unavailable' || err.type === 'peer-not-found') {
           alert('Host not found. Check the code.');
         } else {
           alert('Could not initialize network. Try again.');
