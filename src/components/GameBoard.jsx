@@ -31,13 +31,23 @@ const DraggableCard = ({ card, disabled }) => {
   );
 };
 
-const DroppableCell = ({ id, card, flashClass, element, isLevitating = false }) => {
+const DroppableCell = ({ id, card, flashClass, element, isLevitating = false, index = 0 }) => {
   const { isOver, setNodeRef } = useDroppable({ id, disabled: !!card });
+  
+  const row = Math.floor(index / 3);
+  const col = index % 3;
+  const dx = `${(1 - col) * 110}%`;
+  const dy = `${(1 - row) * 110}%`;
+
   return (
     <div ref={setNodeRef} className={`cell ${isOver && !card ? 'hover' : ''}`}>
       {!card && element && <div className="cell-element">{element}</div>}
       {card && (
-        <div key={`${card.id}-${card.owner}`} className={`tt-card ${card.owner} on-board ${flashClass || ''} ${isLevitating ? 'levitate-loot' : ''}`}>
+        <div 
+          key={`${card.id}-${card.owner}`} 
+          className={`tt-card ${card.owner} on-board ${flashClass || ''} ${isLevitating ? 'levitate-loot' : ''}`}
+          style={isLevitating ? { '--dx': dx, '--dy': dy } : {}}
+        >
           <div className="card-bg" style={{ backgroundImage: `url(${card.image})` }} />
           {card.element && <div className="element-icon">{card.element}</div>}
           <div className="stats">
@@ -424,7 +434,14 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
       <div className="spire-wrapper">
 
-        {victorySequence && <div className="lightning-overlay" />}
+        {victorySequence && (
+          <>
+            <div className="lightning-overlay" />
+            <svg className="lightning-bolt" viewBox="0 0 100 500" preserveAspectRatio="none">
+              <path d="M50,0 L20,150 L60,180 L10,350 L70,360 L0,500 L80,380 L30,370 L90,190 L40,160 Z" />
+            </svg>
+          </>
+        )}
 
         {/* Win / Draw / Lose overlay */}
         {gameResult && (
@@ -479,6 +496,7 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
                   element={boardElements[i]}
                   flashClass={flashMap[i] ? `captured-${flashMap[i]}` : ''}
                   isLevitating={levitatingCards.includes(i)}
+                  index={i}
                 />
               ))}
             </div>
