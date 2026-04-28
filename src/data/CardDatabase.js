@@ -97,7 +97,8 @@ export function generateCard(rarity = 'COMMON', owner = 'player', overrideName =
     ...BOSS_NAMES,
     'Goblin', 'Rat', 'Zombie', 'Imp', 'Crow', 'Skeleton', 'Slime', 'Spider', 'Wraith', 'Ghoul', 'Bat', 'Wolf',
     'Gargoyle', 'Harpy', 'Mimic', 'Centaur', 'Minotaur', 'Cyclops', 'Satyr', 'Succubus', 'Naga', 'Griffin',
-    'Dragon', 'Hydra', 'Phoenix', 'Behemoth', 'Chimera', 'Vampire'
+    'Dragon', 'Hydra', 'Phoenix', 'Behemoth', 'Chimera', 'Vampire', 'Lich', 'Krakken', 'Colossus', 'Medusa',
+    'The Archangel', 'Void Reaper', 'Soul Eater', 'Ancient One', 'Star Caller', 'The First Knight', 'Dragon Lord', 'Titan'
   ];
 
   if (cardsWithArt.includes(name)) {

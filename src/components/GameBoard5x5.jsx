@@ -272,16 +272,16 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
       ).sort(() => Math.random() - 0.5);
 
       let pRaw = [];
-      const pPool = data.playerDeck.filter(c => !c.isAvatar);
+      const pPool = [...data.playerDeck.filter(c => !c.isAvatar)].sort(() => 0.5 - Math.random());
       
       if (pPool.length >= 13) {
-        pRaw = (isRandom ? [...pPool].sort(() => 0.5 - Math.random()) : pPool).slice(0, 13);
+        pRaw = pPool.slice(0, 13);
       } else {
         pRaw = [...pPool];
         while(pRaw.length < 13) {
           pRaw.push(generateCard('RARE', 'player'));
         }
-        if (isRandom) pRaw.sort(() => 0.5 - Math.random());
+        pRaw.sort(() => 0.5 - Math.random());
       }
 
       const oHand = generateTestHand('opponent');
