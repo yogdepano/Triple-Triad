@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { loadSaveData, saveData } from '../data/MockSaveData';
+import { generateCard } from '../data/CardDatabase';
 import { placeCardOnBoard } from '../engine/BoardLogic';
 import { calculateBestMove } from '../engine/AILogic';
 import { DndContext, useDraggable, useDroppable, DragOverlay, pointerWithin } from '@dnd-kit/core';
@@ -278,26 +279,17 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
       setPlayerHand(pRaw.map((c, i) => ({ ...c, id: `p_${i}_${Date.now()}`, owner: 'player' })));
       setOpponentHand(oHand);
     } else {
-      // Restore Avatars to respective owners for testing
-      const allCards = [...data.playerDeck, ...data.opponentDeck];
-      const pAvatar = allCards.find(c => c.isAvatar && c.name === 'Squall') || { name: 'Squall', top: 'A', right: 9, bottom: 6, left: 'A', element: '✨', isAvatar: true, image: '/card_art_placeholder_1776406291061.png' };
-      const oAvatar = allCards.find(c => c.isAvatar && c.name === 'Sephiroth') || { name: 'Sephiroth', top: 'A', right: 'A', bottom: 9, left: 'A', element: '🌑', isAvatar: true, image: '/card_art_placeholder_1776406291061.png' };
+      // Testing Phase: Generate randomized hands following the requested distribution
+      const generateTestHand = (owner) => [
+        Math.random() < 0.2 ? generateCard('BOSS', owner) : generateCard('EPIC', owner),
+        generateCard('LEGENDARY', owner),
+        generateCard('ELITE', owner),
+        generateCard('RARE', owner),
+        generateCard('COMMON', owner)
+      ].sort(() => Math.random() - 0.5);
 
-      let pPool = data.playerDeck.filter(c => !c.isAvatar);
-      let oPool = data.opponentDeck.filter(c => !c.isAvatar);
-
-      const makeFallback = () => ({ name: 'Conscript', top: Math.floor(Math.random()*5)+1, right: Math.floor(Math.random()*5)+1, bottom: Math.floor(Math.random()*5)+1, left: Math.floor(Math.random()*5)+1, element: null, image: '/card_art_placeholder_1776406291061.png' });
-      while (pPool.length < 4) pPool.push(pPool.length > 0 ? {...pPool[0]} : makeFallback());
-      while (oPool.length < 4) oPool.push(oPool.length > 0 ? {...oPool[0]} : makeFallback());
-
-      if (isRandom) {
-        pPool = shuffle(pPool);
-        oPool = shuffle(oPool);
-      }
-
-      // Always guarantee Avatar + 4 cards
-      const pHand = [pAvatar, ...pPool.slice(0, 4)];
-      const oHand = [oAvatar, ...oPool.slice(0, 4)];
+      const pHand = generateTestHand('player');
+      const oHand = generateTestHand('opponent');
 
       setPlayerHand(pHand.map((c, i) => ({ ...c, id: `p_${i}_${Date.now()}`, owner: 'player' })));
       setOpponentHand(oHand.map((c, i) => ({ ...c, id: `o_${i}_${Date.now()}`, owner: 'opponent' })));

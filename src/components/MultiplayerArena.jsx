@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Peer from 'peerjs';
 import { loadSaveData } from '../data/MockSaveData';
+import { generateCard } from '../data/CardDatabase';
 import { placeCardOnBoard } from '../engine/BoardLogic';
 import { DndContext, useDraggable, useDroppable, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -176,39 +177,18 @@ export default function MultiplayerArena({
 
   // BUG FIX #2 — build full hand of DECK_TOTAL cards, no separate deck state
   const initLocalDeck = (r) => {
-    const data     = loadSaveData();
-    const baseDeck = r === 'host' ? data.playerDeck : data.opponentDeck;
-    const owner    = getMyOwner(r);
+    const owner = getMyOwner(r);
     
-    const buildHand = (pool, size, prefix, ownerVal) => {
-      const avatars = pool.filter(c => c.isAvatar);
-      const nonAvatars = pool.filter(c => !c.isAvatar);
-      const hand = [];
-      
-      const uniqueAvatars = Array.from(new Set(avatars.map(a => a.name)))
-        .map(name => avatars.find(a => a.name === name));
-      
-      uniqueAvatars.forEach((av, i) => {
-        if (hand.length < size) {
-          hand.push({ ...av, id: `${prefix}_av_${i}`, owner: ownerVal });
-        }
-      });
+    // Generate a fresh randomized deck of DECK_TOTAL cards
+    // 1 Legendary, 2 Elite, 3 Epic, 3 Rare, 4 Common
+    const fullHand = [
+      generateCard('LEGENDARY', owner),
+      ...Array.from({ length: 2 }, () => generateCard('ELITE', owner)),
+      ...Array.from({ length: 3 }, () => generateCard('EPIC', owner)),
+      ...Array.from({ length: 3 }, () => generateCard('RARE', owner)),
+      ...Array.from({ length: 4 }, () => generateCard('COMMON', owner))
+    ].sort(() => Math.random() - 0.5);
 
-      if (nonAvatars.length > 0) {
-        while (hand.length < size) {
-          const card = nonAvatars[Math.floor(Math.random() * nonAvatars.length)];
-          hand.push({ ...card, id: `${prefix}_${hand.length}`, owner: ownerVal });
-        }
-      } else {
-        while (hand.length < size) {
-          const card = pool[Math.floor(Math.random() * pool.length)];
-          hand.push({ ...card, id: `${prefix}_${hand.length}`, owner: ownerVal });
-        }
-      }
-      return hand.sort(() => Math.random() - 0.5);
-    };
-
-    const fullHand = buildHand(baseDeck, DECK_TOTAL, r, owner);
     setMyHand(fullHand);              // all 13 visible at once
     setOpponentHandCount(DECK_TOTAL); // show 13 face-down cards for opponent
     setGameResult(null);

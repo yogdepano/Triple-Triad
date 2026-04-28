@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { loadSaveData } from '../data/MockSaveData';
+import { generateCard } from '../data/CardDatabase';
 import { placeCardOnBoard } from '../engine/BoardLogic';
 import { calculateBestMove } from '../engine/AILogic';
 import { DndContext, useDraggable, useDroppable, DragOverlay, pointerWithin } from '@dnd-kit/core';
@@ -72,39 +73,13 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
     setTurnIndex(0);
     setPairIndex(0);
 
-    const buildHand = (pool, size, prefix, owner) => {
-      const avatars = pool.filter(c => c.isAvatar);
-      const nonAvatars = pool.filter(c => !c.isAvatar);
-      const hand = [];
-      
-      const uniqueAvatars = Array.from(new Set(avatars.map(a => a.name)))
-        .map(name => avatars.find(a => a.name === name));
-      
-      uniqueAvatars.forEach((av, i) => {
-        if (hand.length < size) {
-          hand.push({ ...av, id: `${prefix}_av_${i}`, owner });
-        }
-      });
-
-      if (nonAvatars.length > 0) {
-        while (hand.length < size) {
-          const card = nonAvatars[Math.floor(Math.random() * nonAvatars.length)];
-          hand.push({ ...card, id: `${prefix}_${hand.length}`, owner });
-        }
-      } else {
-        while (hand.length < size) {
-          const card = pool[Math.floor(Math.random() * pool.length)];
-          hand.push({ ...card, id: `${prefix}_${hand.length}`, owner });
-        }
-      }
-      return hand.sort(() => Math.random() - 0.5);
-    };
-
-    const b1 = buildHand(data.opponentDeck, 25, 'b1', 'boss1');
-    const b2 = buildHand(data.opponentDeck, 25, 'b2', 'boss2');
+    // Generate Boss Decks (25 cards each, mostly Elite/Legendary)
+    const b1 = Array.from({ length: 25 }, () => generateCard(Math.random() < 0.3 ? 'LEGENDARY' : 'ELITE', 'boss1'));
+    const b2 = Array.from({ length: 25 }, () => generateCard(Math.random() < 0.3 ? 'LEGENDARY' : 'ELITE', 'boss2'));
     
+    // Generate Player Roster (6 players, 5 cards each)
     const newRoster = Array(6).fill(null).map((_, pNum) => {
-        return buildHand(data.playerDeck, 5, `p${pNum}`, `player_${pNum}`);
+        return Array.from({ length: 5 }, () => generateCard(Math.random() < 0.4 ? 'ELITE' : 'RARE', `player_${pNum}`));
     });
 
     setBoss1Hand(b1);

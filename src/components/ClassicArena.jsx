@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Peer from 'peerjs';
 import { loadSaveData } from '../data/MockSaveData';
+import { generateCard } from '../data/CardDatabase';
 import { placeCardOnBoard } from '../engine/BoardLogic';
 import { DndContext, useDraggable, useDroppable, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -177,13 +178,18 @@ export default function ClassicArena({
   const theirScore = board.filter(c => c?.owner === theirOwner).length;
 
   const initHands = (r) => {
-    const data     = loadSaveData();
-    const baseDeck = r === 'host' ? data.playerDeck : data.opponentDeck;
-    const owner    = getMyOwner(r);
-    const hand     = [];
-    for (let i = 0; i < HAND_SIZE; i++) {
-      hand.push({ ...baseDeck[i % baseDeck.length], id: `${r}_${i}`, owner });
-    }
+    const owner = getMyOwner(r);
+    
+    // Generate a fresh randomized deck of 5 cards
+    // 1 Boss/Epic (20%), 1 Legendary, 1 Elite, 1 Rare, 1 Common
+    const hand = [
+      Math.random() < 0.2 ? generateCard('BOSS', owner) : generateCard('EPIC', owner),
+      generateCard('LEGENDARY', owner),
+      generateCard('ELITE', owner),
+      generateCard('RARE', owner),
+      generateCard('COMMON', owner)
+    ].sort(() => Math.random() - 0.5);
+
     setMyHand(hand);
     setOpponentHand(Array(HAND_SIZE).fill({
       id: 'hidden',
