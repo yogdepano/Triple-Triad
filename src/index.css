@@ -331,6 +331,35 @@ body {
 }
 
 /* ═══════════════════════════════════════════════
+   CINEMATIC VICTORY SEQUENCE
+═══════════════════════════════════════════════ */
+.lightning-overlay {
+  position: absolute; inset: 0; z-index: 9999;
+  background: white; pointer-events: none; opacity: 0;
+  animation: lightning-strike 2.5s ease-out forwards;
+}
+
+@keyframes lightning-strike {
+  0% { opacity: 0; }
+  2% { opacity: 1; background: #fff; }
+  6% { opacity: 0; }
+  10% { opacity: 0.9; background: #e0f7fa; }
+  20% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+.levitate-loot {
+  animation: levitate-card 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+  z-index: 150 !important;
+}
+
+@keyframes levitate-card {
+  0% { transform: scale(1) translateY(0); box-shadow: 0 8px 18px rgba(0,0,0,0.7); }
+  15% { transform: scale(1.1) translateY(-20px); box-shadow: 0 0 40px rgba(0, 242, 255, 0.8); }
+  100% { transform: scale(1.15) translateY(-35px) rotate(2deg); box-shadow: 0 0 60px rgba(0, 242, 255, 1); }
+}
+
+/* ═══════════════════════════════════════════════
    WIN / REWARD BANNER
 ═══════════════════════════════════════════════ */
 .win-banner, .reward-phase {

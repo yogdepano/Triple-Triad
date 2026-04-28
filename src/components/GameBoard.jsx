@@ -31,13 +31,13 @@ const DraggableCard = ({ card, disabled }) => {
   );
 };
 
-const DroppableCell = ({ id, card, flashClass, element }) => {
+const DroppableCell = ({ id, card, flashClass, element, isLevitating = false }) => {
   const { isOver, setNodeRef } = useDroppable({ id, disabled: !!card });
   return (
     <div ref={setNodeRef} className={`cell ${isOver && !card ? 'hover' : ''}`}>
       {!card && element && <div className="cell-element">{element}</div>}
       {card && (
-        <div key={`${card.id}-${card.owner}`} className={`tt-card ${card.owner} on-board ${flashClass || ''}`}>
+        <div key={`${card.id}-${card.owner}`} className={`tt-card ${card.owner} on-board ${flashClass || ''} ${isLevitating ? 'levitate-loot' : ''}`}>
           <div className="card-bg" style={{ backgroundImage: `url(${card.image})` }} />
           {card.element && <div className="element-icon">{card.element}</div>}
           <div className="stats">
@@ -252,6 +252,8 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
   const [boardElements, setBoardElements] = useState(Array(9).fill(null));
   const [avatarFlippedBy, setAvatarFlippedBy] = useState({ player: null, opponent: null });
   const [shields, setShields] = useState({ player: 3, opponent: 3 });
+  const [victorySequence, setVictorySequence] = useState(false);
+  const [levitatingCards, setLevitatingCards] = useState([]);
 
   const initGame = (customPlayerHand = null, customOpponentHand = null) => {
     const data = loadSaveData();
@@ -342,6 +344,20 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
           const newPHand = [...finalBoard.filter(c => c?.owner === 'player')].map((c, i) => ({...c, id: `sd_p_${i}_${Date.now()}`}));
           const newOHand = [...finalBoard.filter(c => c?.owner === 'opponent')].map((c, i) => ({...c, id: `sd_o_${i}_${Date.now()}`}));
           setTimeout(() => initGame(newPHand, newOHand), 1500);
+        } else if (result === 'win') {
+          // Identify cards that were flipped from the opponent (id starts with 'o_') but are now owned by 'player'
+          const flippedIndices = finalBoard
+            .map((c, i) => c && c.id.startsWith('o_') && c.owner === 'player' ? i : null)
+            .filter(i => i !== null);
+          
+          setLevitatingCards(flippedIndices);
+          setVictorySequence(true);
+
+          // Wait 2.5s for the lightning and levitation animation to play out
+          setTimeout(() => {
+            setVictorySequence(false);
+            setGameResult(result);
+          }, 2500);
         } else {
           setGameResult(result);
         }
@@ -408,6 +424,8 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
       <div className="spire-wrapper">
 
+        {victorySequence && <div className="lightning-overlay" />}
+
         {/* Win / Draw / Lose overlay */}
         {gameResult && (
           <RewardPhase 
@@ -460,6 +478,7 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
                   card={c}
                   element={boardElements[i]}
                   flashClass={flashMap[i] ? `captured-${flashMap[i]}` : ''}
+                  isLevitating={levitatingCards.includes(i)}
                 />
               ))}
             </div>
