@@ -316,7 +316,7 @@ body {
   100% { box-shadow: 0 8px 18px rgba(0,0,0,0.7); border-color: var(--opponent-color); }
 }
 
-.on-board.player1, .on-board[class*="player_"] { 
+.on-board.player, .on-board.player1, .on-board[class*="player_"] { 
   animation: slam-flip 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, flip-glow-player 0.85s ease-out forwards; 
 }
 .on-board.opponent, .on-board[class*="boss"] { 
