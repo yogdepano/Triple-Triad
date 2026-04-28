@@ -20,13 +20,13 @@ const DraggableCard = ({ card, disabled }) => {
     >
       <div className="card-bg" style={{ backgroundImage: `url(${card.image})` }} />
       {card.element && <div className="element-icon">{card.element}</div>}
-      <div className="stats" style={{ fontSize: '30cqw' }}>
+      <div className="stats">
         <span className="t">{card.top}</span>
         <span className="l">{card.left}</span>
         <span className="r">{card.right}</span>
         <span className="b">{card.bottom}</span>
       </div>
-      <div className="name-plate" style={{ fontSize: '20cqw' }}>{card.name}</div>
+      <div className="name-plate">{card.name}</div>
     </div>
   );
 };
@@ -50,13 +50,13 @@ const DroppableCell = ({ id, card, flashClass, element, isLevitating = false, in
         >
           <div className="card-bg" style={{ backgroundImage: `url(${card.image})` }} />
           {card.element && <div className="element-icon">{card.element}</div>}
-          <div className="stats" style={{ fontSize: '30cqw' }}>
+          <div className="stats">
             <span className="t">{card.top}</span>
             <span className="l">{card.left}</span>
             <span className="r">{card.right}</span>
             <span className="b">{card.bottom}</span>
           </div>
-          <div className="name-plate" style={{ fontSize: '20cqw' }}>{card.name}</div>
+          <div className="name-plate">{card.name}</div>
         </div>
       )}
     </div>
@@ -442,35 +442,21 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
           />
         )}
 
-        {/* ── Opponent Flank (Left) ── */}
-        <div className="side-column boss-align" style={{ width: 'min(28vw, 320px)' }}>
-          <div style={{ position:'absolute', top:'10px', right:'20px', zIndex:10, fontFamily:'Cinzel', color:'rgba(255,255,255,0.7)' }}>
-            O-Shields: {shields.opponent}/3
+        {/* ── Player Flank (Left) ── */}
+        <div className="side-column player-align" style={{ width: 'min(28vw, 320px)' }}>
+          <div style={{ position:'absolute', top:'10px', left:'20px', zIndex:10, fontFamily:'Cinzel', color:'rgba(255,255,255,0.7)' }}>
+            P-Shields: {shields.player}/3
           </div>
-          <div style={{ color: 'var(--opponent-color)', fontWeight: 'bold', fontSize: '1rem', marginBottom: '6px', textAlign: 'center', fontFamily: 'Cinzel' }}>
-            {turn === 'opponent' ? 'OPPONENT TURN' : "WAITING"}
+          <div style={{ color: 'var(--player-color)', fontWeight: 'bold', fontSize: '1rem', marginBottom: '6px', textAlign: 'center', fontFamily: 'Cinzel' }}>
+            {turn === 'player' ? 'YOUR TURN' : 'PLEASE WAIT'}
           </div>
           <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', marginBottom: '8px', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
-            Cards: {opponentHand.length}
+            Hand: {playerHand.length}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', width: '100%' }}>
-            {opponentHand.map(c => (
+            {playerHand.map(c => (
               <div key={c.id} style={{ aspectRatio: '2/3', position: 'relative' }}>
-                {activeRules.includes('open') || gameResult ? (
-                  <div className="tt-card opponent" style={{ width: '100%', height: '100%' }}>
-                    <div className="card-bg" style={{ backgroundImage: `url(${c.image})` }} />
-                    {c.element && <div className="element-icon">{c.element}</div>}
-                    <div className="stats" style={{ fontSize: '30cqw' }}>
-                      <span className="t">{c.top}</span>
-                      <span className="l">{c.left}</span>
-                      <span className="r">{c.right}</span>
-                      <span className="b">{c.bottom}</span>
-                    </div>
-                    <div className="name-plate" style={{ fontSize: '20cqw' }}>{c.name}</div>
-                  </div>
-                ) : (
-                  <div className="tt-card opponent hidden-card" style={{ width: '100%', height: '100%' }}>?</div>
-                )}
+                <DraggableCard card={c} disabled={turn !== 'player' || !!gameResult} />
               </div>
             ))}
           </div>
@@ -499,21 +485,35 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
           </div>
         </div>
 
-        {/* ── Player Flank (Right) ── */}
-        <div className="side-column player-align" style={{ width: 'min(28vw, 320px)' }}>
-          <div style={{ position:'absolute', top:'10px', left:'20px', zIndex:10, fontFamily:'Cinzel', color:'rgba(255,255,255,0.7)' }}>
-            P-Shields: {shields.player}/3
+        {/* ── Opponent Flank (Right) ── */}
+        <div className="side-column boss-align" style={{ width: 'min(28vw, 320px)' }}>
+          <div style={{ position:'absolute', top:'10px', right:'20px', zIndex:10, fontFamily:'Cinzel', color:'rgba(255,255,255,0.7)' }}>
+            O-Shields: {shields.opponent}/3
           </div>
-          <div style={{ color: 'var(--player-color)', fontWeight: 'bold', fontSize: '1rem', marginBottom: '6px', textAlign: 'center', fontFamily: 'Cinzel' }}>
-            {turn === 'player' ? 'YOUR TURN' : 'PLEASE WAIT'}
+          <div style={{ color: 'var(--opponent-color)', fontWeight: 'bold', fontSize: '1rem', marginBottom: '6px', textAlign: 'center', fontFamily: 'Cinzel' }}>
+            {turn === 'opponent' ? 'OPPONENT TURN' : "WAITING"}
           </div>
           <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', marginBottom: '8px', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
-            Hand: {playerHand.length}
+            Cards: {opponentHand.length}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', width: '100%' }}>
-            {playerHand.map(c => (
+            {opponentHand.map(c => (
               <div key={c.id} style={{ aspectRatio: '2/3', position: 'relative' }}>
-                <DraggableCard card={c} disabled={turn !== 'player' || !!gameResult} />
+                {activeRules.includes('open') || gameResult ? (
+                  <div className="tt-card opponent" style={{ width: '100%', height: '100%' }}>
+                    <div className="card-bg" style={{ backgroundImage: `url(${c.image})` }} />
+                    {c.element && <div className="element-icon">{c.element}</div>}
+                    <div className="stats">
+                      <span className="t">{c.top}</span>
+                      <span className="l">{c.left}</span>
+                      <span className="r">{c.right}</span>
+                      <span className="b">{c.bottom}</span>
+                    </div>
+                    <div className="name-plate">{c.name}</div>
+                  </div>
+                ) : (
+                  <div className="tt-card opponent hidden-card" style={{ width: '100%', height: '100%' }}>?</div>
+                )}
               </div>
             ))}
           </div>
@@ -524,13 +524,13 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
             <div className={`tt-card ${activeDrag.owner}`} style={{ width: 'clamp(42px, 5vw, 60px)', height: 'calc(clamp(42px, 5vw, 60px) * 1.5)' }}>
               <div className="card-bg" style={{ backgroundImage: `url(${activeDrag.image})` }} />
               {activeDrag.element && <div className="element-icon">{activeDrag.element}</div>}
-              <div className="stats" style={{ fontSize: '30cqw' }}>
+              <div className="stats">
                 <span className="t">{activeDrag.top}</span>
                 <span className="l">{activeDrag.left}</span>
                 <span className="r">{activeDrag.right}</span>
                 <span className="b">{activeDrag.bottom}</span>
               </div>
-              <div className="name-plate" style={{ fontSize: '20cqw' }}>{activeDrag.name}</div>
+              <div className="name-plate">{activeDrag.name}</div>
             </div>
           ) : null}
         </DragOverlay>
