@@ -48,18 +48,22 @@ body {
 
 .app-header {
   height: var(--header-h);
-  min-height: var(--header-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
-  background: rgba(5, 3, 10, 0.97);
-  border-bottom: 1px solid var(--glass-border);
-  gap: 12px;
-  flex-shrink: 0;
+  padding: 10px 20px;
   z-index: 100;
-  position: sticky;
+}
+.app-header.floating {
+  position: absolute;
   top: 0;
+  left: 0;
+  width: 100%;
+  background: transparent;
+  pointer-events: none; /* Let clicks pass through empty space */
+}
+.app-header > * {
+  pointer-events: auto; /* Re-enable clicks on header items */
 }
 
 .header-right {
@@ -77,83 +81,100 @@ body {
 }
 
 /* ═══════════════════════════════════════════════
-   MODE TOGGLE & RULES
+   MODE DROPDOWN & SETTINGS BTN
 ═══════════════════════════════════════════════ */
-.mode-toggle {
-  display: flex;
-  gap: 6px;
-}
-.mode-toggle button {
-  background: rgba(11, 7, 16, 0.8);
+.mode-dropdown {
+  background: rgba(11, 7, 16, 0.6);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
-  color: rgba(255,255,255,0.7);
-  padding: 5px 13px;
-  font-family: 'Cinzel', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.8px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.25s;
-  white-space: nowrap;
-}
-.mode-toggle button:hover  { color: #fff; border-color: rgba(255,255,255,0.25); }
-.mode-toggle button.active {
-  background: rgba(74, 144, 226, 0.2);
-  border-color: var(--player-color);
   color: #fff;
-  box-shadow: 0 0 12px rgba(74, 144, 226, 0.35);
-}
-
-.rules-panel {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(0,0,0,0.4);
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.07);
-}
-.rule-slot {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-.slot-label {
+  padding: 8px 16px;
   font-family: 'Cinzel', serif;
-  font-size: 0.55rem;
-  color: rgba(255,255,255,0.3);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-.rule-select {
-  font-family: 'Cinzel', serif;
-  font-size: 0.65rem;
-  color: rgba(255,255,255,0.85);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 8px;
-  padding: 3px 8px;
+  font-size: 1rem;
+  letter-spacing: 1px;
   cursor: pointer;
+  border-radius: 8px;
   outline: none;
-  transition: border-color 0.2s, background 0.2s;
-  min-width: 110px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  transition: all 0.3s;
+}
+.mode-dropdown:hover { border-color: var(--player-color); }
+.mode-dropdown option { background: #1a1428; color: #fff; font-family: 'Cinzel', serif; }
+
+.icon-btn.settings-btn {
+  background: rgba(11, 7, 16, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: #fff;
+  padding: 8px 16px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  transition: all 0.3s;
+}
+.icon-btn.settings-btn:hover { border-color: var(--player-color); color: var(--player-color); }
+
+/* ═══════════════════════════════════════════════
+   RULES DRAWER
+═══════════════════════════════════════════════ */
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900;
+  backdrop-filter: blur(2px);
+}
+.rules-drawer {
+  position: fixed; top: 0; right: -320px; width: 300px; height: 100vh;
+  background: rgba(15, 10, 22, 0.95);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid var(--glass-border);
+  box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+  z-index: 1000;
+  transition: right 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex; flex-direction: column;
+}
+.rules-drawer.open { right: 0; }
+.drawer-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px; border-bottom: 1px solid var(--glass-border);
+}
+.drawer-header h3 { margin: 0; font-size: 1.2rem; color: var(--player-color); letter-spacing: 1.5px; }
+.close-btn { background: none; border: none; color: #fff; font-size: 1.8rem; cursor: pointer; }
+.drawer-content { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+.rule-slot { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.slot-label { font-family: 'Cinzel', serif; font-size: 0.65rem; color: rgba(255,255,255,0.4); letter-spacing: 1.5px; text-transform: uppercase; }
+.rule-select {
+  font-family: 'Cinzel', serif; font-size: 0.85rem; color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px; padding: 8px 12px; width: 100%; cursor: pointer; outline: none; transition: all 0.2s;
 }
 .rule-select option { background: #1a1428; color: #fff; }
 
-.reset-btn {
-  font-family: 'Cinzel', serif;
-  font-size: 0.68rem;
-  letter-spacing: 1px;
-  padding: 5px 11px;
-  background: transparent;
-  color: rgba(255,255,255,0.45);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 4px;
+/* ═══════════════════════════════════════════════
+   FLOATING ACTION BUTTON (FAB)
+═══════════════════════════════════════════════ */
+.fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(11, 7, 16, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: #fff;
+  font-size: 1.5rem;
+  display: flex; justify-content: center; align-items: center;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  z-index: 100;
+  transition: all 0.3s;
 }
-.reset-btn:hover { color: var(--player-color); border-color: var(--player-color); }
+.fab:hover { border-color: var(--player-color); color: var(--player-color); transform: rotate(-45deg) scale(1.1); }
+
 
 /* ═══════════════════════════════════════════════
    CLASSIC 3×3 LAYOUT
@@ -314,7 +335,7 @@ body {
 ═══════════════════════════════════════════════ */
 .raid-wrapper {
   display: flex; align-items: center; justify-content: center; gap: 40px;
-  padding: 30px; height: calc(100vh - var(--header-h));
+  padding: 30px; height: 100vh;
   background: url('/assets/arena_bg.png') center/cover no-repeat;
 }
 .raid-board-container { display: flex; flex-direction: column; align-items: center; gap: 16px; }
@@ -347,7 +368,7 @@ body {
 /* ═══════════════════════════════════════════════
    ADVENTURE MAP
 ═══════════════════════════════════════════════ */
-.adv-wrapper { display: flex; flex-direction: column; height: calc(100vh - var(--header-h)); background: #0b0710; }
+.adv-wrapper { display: flex; flex-direction: column; height: 100vh; background: #0b0710; }
 .adv-header  { display: flex; align-items: center; gap: 20px; padding: 10px 24px; background: rgba(18,10,28,0.98); border-bottom: 1px solid rgba(255,255,255,0.1); }
 .adv-map-canvas { flex: 1; position: relative; overflow: hidden; background: url('/adventure_bg.jpg') center/cover; }
 .map-node {
@@ -361,7 +382,7 @@ body {
 /* ═══════════════════════════════════════════════
    DECK PICKER
 ═══════════════════════════════════════════════ */
-.deck-picker-wrapper { display: flex; flex-direction: column; align-items: center; height: calc(100vh - var(--header-h)); padding: 40px; background: #0b0710; }
+.deck-picker-wrapper { display: flex; flex-direction: column; align-items: center; height: 100vh; padding: 40px; background: #0b0710; padding-top: 80px; }
 .deck-picker-grid    { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 24px; width: 100%; max-width: 1200px; }
 
 .copy-link-btn {

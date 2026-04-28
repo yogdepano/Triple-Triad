@@ -43,6 +43,7 @@ function App() {
   const [currentMode, setCurrentMode] = useState('classic');
   const [gameKey,     setGameKey]     = useState(0);
   const [initialRoom, setInitialRoom] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -96,33 +97,48 @@ function App() {
   const sp = matchConfig.specialRule;
   const cfg = { ...matchConfig, basicRules: matchConfig.basicRules.filter(Boolean) };
 
-  const rulesPanel = (
-    <div className="rules-panel">
-      <RuleDropdown id="basic-slot-1"   label="Basic 1"   value={b1} exclude={[b2, sp].filter(Boolean)} onChange={setBasic1} />
-      <RuleDropdown id="basic-slot-2"   label="Basic 2"   value={b2} exclude={[b1, sp].filter(Boolean)} onChange={setBasic2} />
-      <RuleDropdown id="special-slot"   label="Special"   value={sp} exclude={[b1, b2].filter(Boolean)} onChange={setSpecial} />
-      <RuleDropdown id="infection-slot" label="Infection" value={null} onChange={() => {}} disabled />
-    </div>
+  const rulesDrawer = (
+    <>
+      {isDrawerOpen && <div className="drawer-overlay" onClick={() => setIsDrawerOpen(false)} />}
+      <div className={`rules-drawer ${isDrawerOpen ? 'open' : ''}`}>
+        <div className="drawer-header">
+          <h3>Match Settings</h3>
+          <button className="close-btn" onClick={() => setIsDrawerOpen(false)}>×</button>
+        </div>
+        <div className="drawer-content">
+          <RuleDropdown id="basic-slot-1"   label="Basic 1"   value={b1} exclude={[b2, sp].filter(Boolean)} onChange={setBasic1} />
+          <RuleDropdown id="basic-slot-2"   label="Basic 2"   value={b2} exclude={[b1, sp].filter(Boolean)} onChange={setBasic2} />
+          <RuleDropdown id="special-slot"   label="Special"   value={sp} exclude={[b1, b2].filter(Boolean)} onChange={setSpecial} />
+          <RuleDropdown id="infection-slot" label="Infection" value={null} onChange={() => {}} disabled />
+        </div>
+      </div>
+    </>
   );
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        {/* Mode buttons */}
-        <div className="mode-toggle">
-          <button className={currentMode === 'classic'        ? 'active' : ''} onClick={() => switchMode('classic')}>3×3</button>
-          <button className={currentMode === 'classic_online' ? 'active' : ''} onClick={() => switchMode('classic_online')}>3×3 ⚔</button>
-          <button className={currentMode === 'multiplayer'    ? 'active' : ''} onClick={() => switchMode('multiplayer')}>5×5</button>
-          <button className={currentMode === 'raid'           ? 'active' : ''} onClick={() => switchMode('raid')}>Raid</button>
-          <button className={currentMode === 'adventure'      ? 'active' : ''} onClick={() => switchMode('adventure')}>⚔ Quest</button>
+      <header className="app-header floating">
+        {/* Mode Dropdown */}
+        <div className="mode-selector">
+          <select className="mode-dropdown" value={currentMode} onChange={(e) => switchMode(e.target.value)}>
+            <option value="classic">3×3 Classic</option>
+            <option value="classic_online">3×3 ⚔ Online</option>
+            <option value="multiplayer">5×5 Multiplayer</option>
+            <option value="raid">World Boss Raid</option>
+            <option value="adventure">⚔ Quest</option>
+          </select>
         </div>
 
-        {/* Desktop Rules (Always Visible) */}
+        {/* Floating Settings Button */}
         <div className="header-right">
-          {rulesPanel}
-          <button className="reset-btn" onClick={handleReset}>↺ Reset</button>
+          <button className="icon-btn settings-btn" onClick={() => setIsDrawerOpen(true)}>⚙️ Rules</button>
         </div>
       </header>
+
+      {rulesDrawer}
+      
+      {/* FAB Reset Button */}
+      <button className="fab reset-fab" onClick={handleReset} title="Reset Match">↺</button>
 
       <main className="app-main">
         {currentMode === 'classic'        && <GameBoard       key={gameKey} matchConfig={cfg} onReset={handleReset} />}
