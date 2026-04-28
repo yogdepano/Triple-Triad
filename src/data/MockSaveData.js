@@ -1,6 +1,7 @@
 import { generateTestingDeck } from './CardDatabase';
 
 const DEFAULT_SAVE = {
+  version: 2,
   playerId: 'user_1',
   playerDeck: generateTestingDeck(),
   opponentDeck: [
@@ -35,6 +36,11 @@ export function loadSaveData() {
   let parsed = DEFAULT_SAVE;
   if (data) {
     parsed = { ...DEFAULT_SAVE, ...JSON.parse(data) };
+    if (parsed.version !== 2) {
+      console.warn("Old save data schema detected. Resetting save data.");
+      parsed = DEFAULT_SAVE;
+      saveData(parsed);
+    }
   }
   
   // Daily shield regeneration (24h = 86400000ms)
