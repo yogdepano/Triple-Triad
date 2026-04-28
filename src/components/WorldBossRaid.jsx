@@ -173,8 +173,6 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
       <div className="raid-wrapper raid-horizontal-layout">
-        <button onClick={resetGame} style={{ position: 'absolute', top: '15px', right: '20px', padding: '8px 16px', background: 'transparent', border: '1px solid var(--player-color)', color: 'white', cursor: 'pointer', fontFamily: 'Cinzel', zIndex: 1000}}>Reset Run</button>
-        
         {/* Left Column: 10-Player "Tag-Out" Rotation Active Slots */}
         <div className="side-column player-align" style={{ minWidth: 'fit-content', paddingRight: '40px' }}>
           <div className="slot-container" style={{ opacity: currentTurn === 'activeA' ? 1 : 0.5, alignItems:'center', display:'flex', flexDirection:'column' }}>
