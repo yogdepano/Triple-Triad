@@ -476,8 +476,17 @@ body {
 .path-locked { opacity: 0.3; }
 
 /* ═══════════════════════════════════════════════
-   DECK PICKER
+   UI COMPONENTS
 ═══════════════════════════════════════════════ */
+.rule-desc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 6px;
+  line-height: 1.3;
+  font-family: 'Rajdhani', sans-serif;
+  font-style: italic;
+  max-width: 250px;
+}
 .deck-picker-wrapper { display: flex; flex-direction: column; align-items: center; height: 100vh; padding: 40px; background: #0b0710; padding-top: 80px; }
 .deck-picker-grid    { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 24px; width: 100%; max-width: 1200px; }
 

@@ -4,6 +4,7 @@ import ClassicArena from './components/ClassicArena'
 import WorldBossRaid from './components/WorldBossRaid'
 import MultiplayerArena from './components/MultiplayerArena'
 import AdventureMap from './components/AdventureMap'
+import { RULE_DESCRIPTIONS } from './data/RuleDescriptions'
 
 const ALL_RULES = [
   { value: 'basic',       label: 'Basic' },
@@ -35,6 +36,7 @@ function RuleDropdown({ id, value, label, exclude = [], onChange, disabled = fal
           <option key={r.value} value={r.value}>{r.label}</option>
         ))}
       </select>
+      {value && <div className="rule-desc">{RULE_DESCRIPTIONS[value]}</div>}
     </div>
   );
 }

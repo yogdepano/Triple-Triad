@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { generateMap, completeNode, TOTAL_ROWS } from '../data/MapGenerator';
 import { loadSaveData, saveData, resetAdventureRun, resetAllData } from '../data/MockSaveData';
 import AdventureEncounter from './AdventureEncounter';
+import { RULE_DESCRIPTIONS } from '../data/RuleDescriptions';
 
 const NODE_ICONS = { common: '⚔', elite: '☠', boss: '👑' };
 const NODE_LABELS = { common: 'Common', elite: 'Elite', boss: 'Boss' };
@@ -156,8 +157,8 @@ export default function AdventureMap() {
           <span className="adv-act-name">The Lowlands</span>
         </div>
         <div className="adv-map-rules">
-          {MAP_RULES.map(r => <span key={r} className="adv-rule-chip">{r}</span>)}
-          <span className="adv-rule-chip boss-chip">Boss: {BOSS_EXTRA_RULE}</span>
+          {MAP_RULES.map(r => <span key={r} className="adv-rule-chip" title={RULE_DESCRIPTIONS[r.toLowerCase()]}>{r}</span>)}
+          <span className="adv-rule-chip boss-chip" title={RULE_DESCRIPTIONS[BOSS_EXTRA_RULE.toLowerCase()]}>Boss: {BOSS_EXTRA_RULE}</span>
         </div>
       </div>
 
@@ -224,9 +225,9 @@ export default function AdventureMap() {
           </div>
           <div className="adv-node-panel-rules">
             <span className="adv-rules-label">Rules:</span>
-            {MAP_RULES.map(r => <span key={r} className="adv-rule-chip">{r}</span>)}
+            {MAP_RULES.map(r => <span key={r} className="adv-rule-chip" title={RULE_DESCRIPTIONS[r.toLowerCase()]}>{r}</span>)}
             {selectedNode.type === 'boss' && (
-              <span className="adv-rule-chip boss-chip">{BOSS_EXTRA_RULE}</span>
+              <span className="adv-rule-chip boss-chip" title={RULE_DESCRIPTIONS[BOSS_EXTRA_RULE.toLowerCase()]}>{BOSS_EXTRA_RULE}</span>
             )}
           </div>
           {selectedNode.type === 'boss' && (
