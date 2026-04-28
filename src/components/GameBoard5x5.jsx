@@ -443,7 +443,7 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
         )}
 
         {/* ── Player Flank (Left) ── */}
-        <div className="side-column player-align" style={{ width: 'min(28vw, 320px)' }}>
+        <div className="side-column player-align" style={{ width: 'min(38vw, 500px)' }}>
           <div style={{ position:'absolute', top:'10px', left:'20px', zIndex:10, fontFamily:'Cinzel', color:'rgba(255,255,255,0.7)' }}>
             P-Shields: {shields.player}/3
           </div>
@@ -453,7 +453,7 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
           <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', marginBottom: '8px', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
             Hand: {playerHand.length}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', width: '100%' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', width: '100%' }}>
             {playerHand.map(c => (
               <div key={c.id} style={{ aspectRatio: '2/3', position: 'relative' }}>
                 <DraggableCard card={c} disabled={turn !== 'player' || !!gameResult} />
@@ -486,7 +486,7 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
         </div>
 
         {/* ── Opponent Flank (Right) ── */}
-        <div className="side-column boss-align" style={{ width: 'min(28vw, 320px)' }}>
+        <div className="side-column boss-align" style={{ width: 'min(38vw, 500px)' }}>
           <div style={{ position:'absolute', top:'10px', right:'20px', zIndex:10, fontFamily:'Cinzel', color:'rgba(255,255,255,0.7)' }}>
             O-Shields: {shields.opponent}/3
           </div>
@@ -496,7 +496,7 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
           <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', marginBottom: '8px', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
             Cards: {opponentHand.length}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', width: '100%' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', width: '100%' }}>
             {opponentHand.map(c => (
               <div key={c.id} style={{ aspectRatio: '2/3', position: 'relative' }}>
                 {activeRules.includes('open') || gameResult ? (
