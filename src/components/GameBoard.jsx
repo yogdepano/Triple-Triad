@@ -323,53 +323,61 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
   };
 
   const executeMove = (card, position) => {
-    const { newBoard, capturedBy } = placeCardOnBoard(board, card, position, 3, activeRules, boardElements);
-    setBoard(newBoard);
+    const { newBoard, capturedBy, captureSequence } = placeCardOnBoard(board, card, position, 3, activeRules, boardElements);
+    
+    // 1. Place the initial card
+    const boardWithPlacedCard = [...board];
+    boardWithPlacedCard[position] = { ...card, owner: card.owner };
+    setBoard(boardWithPlacedCard);
 
-    // Flash special captures
-    const toFlash = {};
-    const newAvatarFlippedBy = { ...avatarFlippedBy };
+    // 2. Remove from hand
+    if (card.owner === 'player') setPlayerHand(prev => prev.filter(c => c.id !== card.id));
+    else setOpponentHand(prev => prev.filter(c => c.id !== card.id));
 
-    Object.entries(capturedBy).forEach(([idx, rule]) => {
-      if (['same', 'plus', 'equal', 'combo'].includes(rule)) toFlash[idx] = rule;
-      if (newBoard[idx].isAvatar) {
-        // If it was captured, it is now owned by `card.owner`, meaning it originally belonged to the other player.
-        const originalOwner = newBoard[idx].owner === 'player' ? 'opponent' : 'player';
-        newAvatarFlippedBy[originalOwner] = rule;
-      }
-    });
-    setAvatarFlippedBy(newAvatarFlippedBy);
-
-    if (Object.keys(toFlash).length) {
-      setFlashMap(toFlash);
-      setTimeout(() => setFlashMap({}), 750);
-    }
-
-    let newPlayerHand = playerHand;
-    let newOpponentHand = opponentHand;
-
-    if (card.owner === 'player') {
-      newPlayerHand = playerHand.filter(c => c.id !== card.id);
-      setPlayerHand(newPlayerHand);
-    } else {
-      newOpponentHand = opponentHand.filter(c => c.id !== card.id);
-      setOpponentHand(newOpponentHand);
-    }
-
-    const result = checkWin(newBoard);
-
-    if (result) {
-      if (result === 'draw' && activeRules.includes('sudden_death')) {
-        // Sudden Death: keep current possession and immediately restart
-        const newPHand = [...newPlayerHand, ...newBoard.filter(c => c?.owner === 'player')].map((c, i) => ({...c, id: `sd_p_${i}_${Date.now()}`}));
-        const newOHand = [...newOpponentHand, ...newBoard.filter(c => c?.owner === 'opponent')].map((c, i) => ({...c, id: `sd_o_${i}_${Date.now()}`}));
-        
-        setTimeout(() => initGame(newPHand, newOHand), 1500);
+    // 3. Define finalization logic
+    const finalize = (finalBoard) => {
+      const result = checkWin(finalBoard);
+      if (result) {
+        if (result === 'draw' && activeRules.includes('sudden_death')) {
+          const newPHand = [...finalBoard.filter(c => c?.owner === 'player')].map((c, i) => ({...c, id: `sd_p_${i}_${Date.now()}`}));
+          const newOHand = [...finalBoard.filter(c => c?.owner === 'opponent')].map((c, i) => ({...c, id: `sd_o_${i}_${Date.now()}`}));
+          setTimeout(() => initGame(newPHand, newOHand), 1500);
+        } else {
+          setGameResult(result);
+        }
       } else {
-        setGameResult(result);
+        setTurn(t => t === 'player' ? 'opponent' : 'player');
       }
+    };
+
+    // 4. Staggered captures
+    if (captureSequence.length === 0) {
+      setTimeout(() => finalize(newBoard), 400);
     } else {
-      setTurn(t => t === 'player' ? 'opponent' : 'player');
+      captureSequence.forEach((targetIdx, i) => {
+        setTimeout(() => {
+          setBoard(current => {
+            const next = [...current];
+            next[targetIdx] = { ...next[targetIdx], owner: card.owner };
+            return next;
+          });
+
+          const rule = capturedBy[targetIdx];
+          if (['same', 'plus', 'equal', 'combo'].includes(rule)) {
+            setFlashMap({ [targetIdx]: rule });
+            setTimeout(() => setFlashMap({}), 600);
+          }
+
+          if (newBoard[targetIdx].isAvatar) {
+            const originalOwner = newBoard[targetIdx].owner === 'player' ? 'opponent' : 'player';
+            setAvatarFlippedBy(prev => ({ ...prev, [originalOwner]: rule }));
+          }
+
+          if (i === captureSequence.length - 1) {
+            setTimeout(() => finalize(newBoard), 500);
+          }
+        }, (i + 1) * 250);
+      });
     }
   };
 

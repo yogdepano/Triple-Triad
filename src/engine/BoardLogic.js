@@ -9,8 +9,8 @@ export function placeCardOnBoard(board, card, position, gridWidth = 3, activeRul
   const newBoard = [...board];
   newBoard[position] = { ...card, owner: card.owner };
 
-  const captures = new Set();
   const capturedBy = {};
+  const captureSequence = [];
   const comboQueue = [];
 
   const getModifier = (c, pos) => {
@@ -48,9 +48,11 @@ export function placeCardOnBoard(board, card, position, gridWidth = 3, activeRul
   if (activeRules.includes('equal')) {
     adjacentCards.forEach(adj => {
       if (adj.index >= 0 && adj.theirCard.owner !== card.owner && adj.theirCard.owner !== 'wall' && adj.ownVal === adj.theirVal) {
-        captures.add(adj.index);
-        capturedBy[adj.index] = 'equal';
-        comboQueue.push(adj.index);
+        if (!capturedBy[adj.index]) {
+          capturedBy[adj.index] = 'equal';
+          captureSequence.push(adj.index);
+          comboQueue.push(adj.index);
+        }
       }
     });
   }
@@ -69,9 +71,11 @@ export function placeCardOnBoard(board, card, position, gridWidth = 3, activeRul
     if (activeRules.includes('same') && sameFlips.length >= 2) {
       sameFlips.forEach(idx => {
         if (idx >= 0 && newBoard[idx].owner !== card.owner) {
-          captures.add(idx);
-          capturedBy[idx] = 'same';
-          comboQueue.push(idx);
+          if (!capturedBy[idx]) {
+            capturedBy[idx] = 'same';
+            captureSequence.push(idx);
+            comboQueue.push(idx);
+          }
         }
       });
     }
@@ -89,8 +93,11 @@ export function placeCardOnBoard(board, card, position, gridWidth = 3, activeRul
       if (indices.length >= 2) {
         indices.forEach(idx => {
           if (idx >= 0 && newBoard[idx].owner !== card.owner && newBoard[idx].owner !== 'wall') {
-            captures.add(idx);
-            if (!capturedBy[idx]) { capturedBy[idx] = 'plus'; comboQueue.push(idx); }
+            if (!capturedBy[idx]) { 
+              capturedBy[idx] = 'plus'; 
+              captureSequence.push(idx);
+              comboQueue.push(idx); 
+            }
           }
         });
       }
@@ -101,14 +108,16 @@ export function placeCardOnBoard(board, card, position, gridWidth = 3, activeRul
   if (activeRules.includes('basic')) {
     adjacentCards.forEach(adj => {
       if (adj.index >= 0 && adj.theirCard.owner !== card.owner && adj.theirCard.owner !== 'wall' && adj.ownVal > adj.theirVal) {
-        captures.add(adj.index);
-        if (!capturedBy[adj.index]) capturedBy[adj.index] = 'basic';
+        if (!capturedBy[adj.index]) {
+          capturedBy[adj.index] = 'basic';
+          captureSequence.push(adj.index);
+        }
       }
     });
   }
 
-  // Execute initial captures
-  captures.forEach(idx => {
+  // Execute initial captures in newBoard
+  captureSequence.forEach(idx => {
     newBoard[idx] = { ...newBoard[idx], owner: card.owner };
   });
 
@@ -121,9 +130,9 @@ export function placeCardOnBoard(board, card, position, gridWidth = 3, activeRul
       
       comboAdjacents.forEach(adj => {
         if (adj.index >= 0 && adj.theirCard.owner !== card.owner && adj.theirCard.owner !== 'wall' && adj.ownVal > adj.theirVal) {
-          if (!captures.has(adj.index)) {
-            captures.add(adj.index);
+          if (!capturedBy[adj.index]) {
             capturedBy[adj.index] = 'combo';
+            captureSequence.push(adj.index);
             comboQueue.push(adj.index);
             newBoard[adj.index] = { ...newBoard[adj.index], owner: card.owner };
           }
@@ -132,5 +141,5 @@ export function placeCardOnBoard(board, card, position, gridWidth = 3, activeRul
     }
   }
 
-  return { newBoard, capturedBy };
+  return { newBoard, capturedBy, captureSequence };
 }

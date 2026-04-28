@@ -226,22 +226,49 @@ export default function MultiplayerArena({
 
       } else if (data.type === 'MOVE') {
         if (data.rules) { setArenaRules(data.rules); arenaRulesRef.current = data.rules; }
-        const toFlash = {};
-        if (data.capturedBy) {
-          Object.entries(data.capturedBy).forEach(([idx, rule]) => {
-            if (['same', 'plus', 'equal', 'combo'].includes(rule)) toFlash[idx] = rule;
+        
+        // Staggered playback for network move
+        const { board: finalBoard, captureSequence, capturedBy, placedCard, targetIndex } = data;
+        
+        // Step 0: Place the card
+        setBoard(prev => {
+          const b = [...prev];
+          b[targetIndex] = { ...placedCard, owner: placedCard.owner };
+          return b;
+        });
+        setOpponentHandCount(prev => Math.max(0, prev - 1));
+
+        if (!captureSequence || captureSequence.length === 0) {
+          setTimeout(() => {
+            setBoard(finalBoard);
+            setIsMyTurn(true);
+            const res = evalResult(finalBoard, getMyOwner(roleRef.current));
+            if (res) setGameResult(res);
+          }, 400);
+        } else {
+          captureSequence.forEach((idx, i) => {
+            setTimeout(() => {
+              setBoard(current => {
+                const next = [...current];
+                next[idx] = { ...next[idx], owner: placedCard.owner };
+                return next;
+              });
+              const rule = capturedBy[idx];
+              if (['same', 'plus', 'equal', 'combo'].includes(rule)) {
+                setFlashMap({ [idx]: rule });
+                setTimeout(() => setFlashMap({}), 600);
+              }
+              if (i === captureSequence.length - 1) {
+                setTimeout(() => {
+                  setBoard(finalBoard);
+                  setIsMyTurn(true);
+                  const res = evalResult(finalBoard, getMyOwner(roleRef.current));
+                  if (res) setGameResult(res);
+                }, 500);
+              }
+            }, (i + 1) * 200);
           });
         }
-        if (Object.keys(toFlash).length > 0) {
-          setFlashMap(toFlash);
-          setTimeout(() => setFlashMap({}), 750);
-        }
-        setBoard(data.board);
-        setOpponentHandCount(prev => Math.max(0, prev - 1));
-        setIsMyTurn(true);
-        const result = evalResult(data.board, getMyOwner(roleRef.current));
-        if (result) setGameResult(result);
-
       } else if (data.type === 'RESET') {
         setBoard(Array(BOARD_SIZE).fill(null));
         if (data.boardElements) {
@@ -353,33 +380,55 @@ export default function MultiplayerArena({
 
   // BUG FIX #2 — no deck refill; just remove the played card from the full hand
   const executeMove = (placedCard, targetIndex) => {
-    setMyHand(prev => prev.filter(c => c.id !== placedCard.id));
-
-    const { newBoard, capturedBy } = placeCardOnBoard(
+    const { newBoard, capturedBy, captureSequence } = placeCardOnBoard(
       board, placedCard, targetIndex, GRID, arenaRules, boardElementsRef.current
     );
 
-    const toFlash = {};
-    Object.entries(capturedBy).forEach(([idx, rule]) => {
-      if (['same', 'plus', 'equal', 'combo'].includes(rule)) toFlash[idx] = rule;
-    });
-    if (Object.keys(toFlash).length > 0) {
-      setFlashMap(toFlash);
-      setTimeout(() => setFlashMap({}), 750);
-    }
-
-    setBoard(newBoard);
-    setIsMyTurn(false);
-
-    const result = evalResult(newBoard, myOwner);
-    if (result) setGameResult(result);
+    setMyHand(prev => prev.filter(c => c.id !== placedCard.id));
+    
+    // Step 0: Local placement
+    const bWithPlaced = [...board];
+    bWithPlaced[targetIndex] = { ...placedCard, owner: placedCard.owner };
+    setBoard(bWithPlaced);
 
     if (connection) {
       connection.send({
         type: 'MOVE',
         board: newBoard,
         capturedBy,
+        captureSequence,
+        placedCard,
+        targetIndex,
         rules: role === 'host' ? arenaRulesRef.current : undefined,
+      });
+    }
+
+    const finalize = (finalBoard) => {
+      setBoard(finalBoard);
+      setIsMyTurn(false);
+      const result = evalResult(finalBoard, myOwner);
+      if (result) setGameResult(result);
+    };
+
+    if (captureSequence.length === 0) {
+      setTimeout(() => finalize(newBoard), 400);
+    } else {
+      captureSequence.forEach((idx, i) => {
+        setTimeout(() => {
+          setBoard(current => {
+            const next = [...current];
+            next[idx] = { ...next[idx], owner: placedCard.owner };
+            return next;
+          });
+          const rule = capturedBy[idx];
+          if (['same', 'plus', 'equal', 'combo'].includes(rule)) {
+            setFlashMap({ [idx]: rule });
+            setTimeout(() => setFlashMap({}), 600);
+          }
+          if (i === captureSequence.length - 1) {
+            setTimeout(() => finalize(newBoard), 500);
+          }
+        }, (i + 1) * 200);
       });
     }
   };

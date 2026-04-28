@@ -94,9 +94,14 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
   const activeHandB = rosterHands[activeIndexB] || [];
 
   const executeMove = (placedCard, targetIndex) => {
-    const { newBoard } = placeCardOnBoard(board, placedCard, targetIndex, 7, activeRules);
-    setBoard(newBoard);
+    const { newBoard, captureSequence } = placeCardOnBoard(board, placedCard, targetIndex, 7, activeRules);
     
+    // 1. Place initial card
+    const boardWithPlacedCard = [...board];
+    boardWithPlacedCard[targetIndex] = { ...placedCard, owner: placedCard.owner };
+    setBoard(boardWithPlacedCard);
+    
+    // 2. Remove from respective hand
     if (placedCard.owner.startsWith('player')) {
       setRosterHands(prev => {
          const up = [...prev];
@@ -104,17 +109,38 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
          up[index] = up[index].filter(c => c.id !== placedCard.id);
          return up;
       });
-
-      if (placedCard.owner === `player_${activeIndexB}`) {
-         setPairIndex(prev => (prev + 1) % 3);
-      }
     } else if (placedCard.owner === 'boss1') {
       setBoss1Hand(prev => prev.filter(c => c.id !== placedCard.id));
     } else if (placedCard.owner === 'boss2') {
       setBoss2Hand(prev => prev.filter(c => c.id !== placedCard.id));
     }
 
-    setTurnIndex(prev => (prev + 1) % 4);
+    // 3. Define finalization
+    const finalize = (finalBoard) => {
+      setBoard(finalBoard); 
+      if (placedCard.owner === `player_${activeIndexB}`) {
+         setPairIndex(prev => (prev + 1) % 3);
+      }
+      setTurnIndex(prev => (prev + 1) % 4);
+    };
+
+    // 4. Staggered captures
+    if (captureSequence.length === 0) {
+      setTimeout(() => finalize(newBoard), 400);
+    } else {
+      captureSequence.forEach((targetIdx, i) => {
+        setTimeout(() => {
+          setBoard(current => {
+            const next = [...current];
+            next[targetIdx] = { ...next[targetIdx], owner: placedCard.owner };
+            return next;
+          });
+          if (i === captureSequence.length - 1) {
+            setTimeout(() => finalize(newBoard), 500);
+          }
+        }, (i + 1) * 200); 
+      });
+    }
   };
 
   const handleDragStart = event => setActiveDragCard(event.active.data.current?.card);
