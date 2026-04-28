@@ -91,8 +91,19 @@ export function generateCard(rarity = 'COMMON', owner = 'player', overrideName =
   const [top, right, bottom, left] = stats.map(s => s === 10 ? 'A' : s);
   
   let image = `/card_art_placeholder_1776406291061.png`;
-  if (BOSS_NAMES.includes(name)) {
-    image = `/assets/${name.toLowerCase()}.png`;
+  
+  // List of all cards that currently have unique artwork in /assets/
+  const cardsWithArt = [
+    ...BOSS_NAMES,
+    'Goblin', 'Rat', 'Zombie', 'Imp', 'Crow', 'Skeleton', 'Slime', 'Spider', 'Wraith', 'Ghoul', 'Bat', 'Wolf',
+    'Gargoyle', 'Harpy', 'Mimic', 'Centaur', 'Minotaur', 'Cyclops', 'Satyr', 'Succubus', 'Naga', 'Griffin',
+    'Dragon', 'Hydra', 'Phoenix', 'Behemoth', 'Chimera', 'Vampire'
+  ];
+
+  if (cardsWithArt.includes(name)) {
+    // Convert names like "Dragon Lord" to "dragon_lord.png"
+    const fileName = name.toLowerCase().replace(/ /g, '_');
+    image = `/assets/${fileName}.png`;
   }
 
   return {
