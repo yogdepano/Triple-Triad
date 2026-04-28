@@ -52,14 +52,14 @@ function shuffle(array) {
   return array;
 }
 
-export function generateCard(rarity = 'COMMON', owner = 'player') {
+export function generateCard(rarity = 'COMMON', owner = 'player', overrideName = null) {
   const rules = RarityRules[rarity.toUpperCase()] || RarityRules.COMMON;
   let stats = [1, 1, 1, 1];
   let name = 'Unknown';
 
   if (rarity.toUpperCase() === 'BOSS') {
     stats = [...rules.forcedDigits];
-    name = BOSS_NAMES[Math.floor(Math.random() * BOSS_NAMES.length)];
+    name = overrideName || BOSS_NAMES[Math.floor(Math.random() * BOSS_NAMES.length)];
   } else {
     // Determine name pool
     if (rarity === 'COMMON') name = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)];
@@ -89,6 +89,9 @@ export function generateCard(rarity = 'COMMON', owner = 'player') {
 
   shuffle(stats);
   const [top, right, bottom, left] = stats.map(s => s === 10 ? 'A' : s);
+  
+  let image = `/card_art_placeholder_1776406291061.png`;
+  if (name === 'Squall') image = `/assets/squall.png`;
 
   return {
     id: `${rarity.toLowerCase()}_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
@@ -98,7 +101,7 @@ export function generateCard(rarity = 'COMMON', owner = 'player') {
     bottom,
     left,
     element: getRandomElement(),
-    image: `/card_art_placeholder_1776406291061.png`, // Default placeholder
+    image, // Default or custom
     owner,
     rarity: rarity.toUpperCase()
   };
@@ -107,14 +110,13 @@ export function generateCard(rarity = 'COMMON', owner = 'player') {
 export function generateTestingDeck() {
   const deck = [];
   
-  // Slot 1: Boss (20% chance) or Epic
-  if (Math.random() < 0.2) deck.push(generateCard('BOSS'));
-  else deck.push(generateCard('EPIC'));
+  // Slot 1: Squall (Always Boss tier for testing)
+  deck.push(generateCard('BOSS', 'player', 'Squall'));
   
-  deck.push(generateCard('LEGENDARY'));
-  deck.push(generateCard('ELITE'));
-  deck.push(generateCard('RARE'));
-  deck.push(generateCard('COMMON'));
+  deck.push(generateCard('LEGENDARY', 'player'));
+  deck.push(generateCard('ELITE', 'player'));
+  deck.push(generateCard('RARE', 'player'));
+  deck.push(generateCard('COMMON', 'player'));
   
   return deck;
 }

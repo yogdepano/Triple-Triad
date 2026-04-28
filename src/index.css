@@ -272,15 +272,17 @@ body {
 }
 
 .stats {
-  position: absolute; inset: 0; font-weight: bold; font-family: 'Playfair Display', serif;
-  font-size: 30cqw; text-shadow: 2px 2px 4px #000; pointer-events: none;
-  z-index: 5;
+  position: absolute; top: 4%; right: 4%; width: 35cqw; height: 35cqw;
+  font-weight: bold; font-family: 'Playfair Display', serif;
+  font-size: 14cqw; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 2px 2px 4px #000;
+  pointer-events: none; z-index: 5;
+  background: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 70%);
 }
 .stats span { position: absolute; }
-.t { top: 6%;    left: 50%; transform: translateX(-50%); }
-.b { bottom: 22%; left: 50%; transform: translateX(-50%); }
-.l { left: 6%;   top:  50%; transform: translateY(-50%); }
-.r { right: 6%;  top:  50%; transform: translateY(-50%); }
+.t { top: 0;    left: 50%; transform: translateX(-50%); }
+.b { bottom: 0; left: 50%; transform: translateX(-50%); }
+.l { left: 0;   top:  50%; transform: translateY(-50%); }
+.r { right: 0;  top:  50%; transform: translateY(-50%); }
 
 .name-plate {
   position: absolute; bottom: 0; width: 100%; padding: 3cqw 0; background: rgba(0,0,0,0.85);
