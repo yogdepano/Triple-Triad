@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import DesktopScaler from './components/DesktopScaler'
 import GameBoard from './components/GameBoard'
 import ClassicArena from './components/ClassicArena'
 import WorldBossRaid from './components/WorldBossRaid'
@@ -120,42 +119,40 @@ function App() {
   );
 
   return (
-    <DesktopScaler>
-      <div className="app-shell">
-        <header className="app-header floating">
-          {/* Mode Dropdown */}
-          <div className="mode-selector">
-            <select className="mode-dropdown" value={currentMode} onChange={(e) => switchMode(e.target.value)}>
-              <option value="classic">3×3 Classic</option>
-              <option value="classic_5x5">5×5 vs AI</option>
-              <option value="classic_online">3×3 ⚔ Online</option>
-              <option value="multiplayer">5×5 Multiplayer</option>
-              <option value="raid">World Boss Raid</option>
-              <option value="adventure">⚔ Quest</option>
-            </select>
-          </div>
+    <div className="app-shell">
+      <header className="app-header floating">
+        {/* Mode Dropdown */}
+        <div className="mode-selector">
+          <select className="mode-dropdown" value={currentMode} onChange={(e) => switchMode(e.target.value)}>
+            <option value="classic">3×3 Classic</option>
+            <option value="classic_5x5">5×5 vs AI</option>
+            <option value="classic_online">3×3 ⚔ Online</option>
+            <option value="multiplayer">5×5 Multiplayer</option>
+            <option value="raid">World Boss Raid</option>
+            <option value="adventure">⚔ Quest</option>
+          </select>
+        </div>
 
-          {/* Floating Settings Button */}
-          <div className="header-right">
-            <button className="icon-btn settings-btn" onClick={() => setIsDrawerOpen(true)}>⚙️ Rules</button>
-          </div>
-        </header>
+        {/* Floating Settings Button */}
+        <div className="header-right">
+          <button className="icon-btn settings-btn" onClick={() => setIsDrawerOpen(true)}>⚙️ Rules</button>
+        </div>
+      </header>
 
-        {rulesDrawer}
-        
-        {/* FAB Reset Button */}
-        <button className="fab reset-fab" onClick={handleReset} title="Reset Match">↺</button>
+      {rulesDrawer}
+      
+      {/* FAB Reset Button */}
+      <button className="fab reset-fab" onClick={handleReset} title="Reset Match">↺</button>
 
-        <main className="app-main">
-          {currentMode === 'classic'        && <GameBoard       key={gameKey} matchConfig={cfg} onReset={handleReset} />}
-          {currentMode === 'classic_5x5'    && <GameBoard5x5    key={gameKey} matchConfig={cfg} onReset={handleReset} />}
-          {currentMode === 'classic_online' && <ClassicArena               matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
-          {currentMode === 'raid'           && <WorldBossRaid   key={gameKey} matchConfig={cfg} />}
-          {currentMode === 'multiplayer'    && <MultiplayerArena            matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
-          {currentMode === 'adventure'      && <AdventureMap />}
-        </main>
-      </div>
-    </DesktopScaler>
+      <main className="app-main">
+        {currentMode === 'classic'        && <GameBoard       key={gameKey} matchConfig={cfg} onReset={handleReset} />}
+        {currentMode === 'classic_5x5'    && <GameBoard5x5    key={gameKey} matchConfig={cfg} onReset={handleReset} />}
+        {currentMode === 'classic_online' && <ClassicArena               matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
+        {currentMode === 'raid'           && <WorldBossRaid   key={gameKey} matchConfig={cfg} />}
+        {currentMode === 'multiplayer'    && <MultiplayerArena            matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
+        {currentMode === 'adventure'      && <AdventureMap />}
+      </main>
+    </div>
   );
 }
 
