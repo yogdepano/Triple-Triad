@@ -184,10 +184,11 @@ export default function AdventureMap() {
                 const y2 = (1 - target.y) * 78 + 6;
                 const isActive = n.completed || n.available;
                 return (
-                  <line
+                  <path
                     key={`${n.id}-${targetId}`}
-                    x1={x1} y1={y1} x2={x2} y2={y2}
+                    d={`M ${x1} ${y1} C ${x1} ${(y1 + y2) / 2}, ${x2} ${(y1 + y2) / 2}, ${x2} ${y2}`}
                     className={`adv-path ${isActive ? 'path-active' : 'path-locked'}`}
+                    fill="none"
                   />
                 );
               })}

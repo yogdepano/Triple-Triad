@@ -50,7 +50,10 @@ const DroppableCell = ({ id, card }) => {
   );
 };
 
+import { useAvatarHand } from '../hooks/useAvatarHand';
+
 export default function WorldBossRaid({ activeRules = ['basic'] }) {
+  const { avatarCard, injectAvatar } = useAvatarHand();
   const [board, setBoard] = useState(Array(49).fill(null));
   const [rosterHands, setRosterHands] = useState(Array(6).fill([]));
   const [boss1Hand, setBoss1Hand] = useState([]);
@@ -65,7 +68,7 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
 
   useEffect(() => {
     resetGame();
-  }, []);
+  }, [avatarCard]);
 
   const resetGame = () => {
     const data = loadSaveData();
@@ -78,9 +81,14 @@ export default function WorldBossRaid({ activeRules = ['basic'] }) {
     const b2 = Array.from({ length: 25 }, () => generateCard(Math.random() < 0.3 ? 'LEGENDARY' : 'ELITE', 'boss2'));
     
     // Generate Player Roster (6 players, 5 cards each)
-    const newRoster = Array(6).fill(null).map((_, pNum) => {
+    let newRoster = Array(6).fill(null).map((_, pNum) => {
         return Array.from({ length: 5 }, () => generateCard(Math.random() < 0.4 ? 'ELITE' : 'RARE', `player_${pNum}`));
     });
+
+    // Inject Avatar into Player 1's hand
+    if (avatarCard) {
+      newRoster[0] = injectAvatar(newRoster[0]);
+    }
 
     setBoss1Hand(b1);
     setBoss2Hand(b2);

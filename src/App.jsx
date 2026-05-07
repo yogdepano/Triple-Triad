@@ -1,4 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import Auth from './components/Auth'
+import AvatarCreator from './components/AvatarCreator'
 import GameBoard from './components/GameBoard'
 import ClassicArena from './components/ClassicArena'
 import WorldBossRaid from './components/WorldBossRaid'
@@ -130,11 +132,13 @@ function App() {
             <option value="multiplayer">5×5 Multiplayer</option>
             <option value="raid">World Boss Raid</option>
             <option value="adventure">⚔ Quest</option>
+            <option value="forge">✨ Forge Avatar</option>
           </select>
         </div>
 
         {/* Floating Settings Button */}
         <div className="header-right">
+          <Auth />
           <button className="icon-btn settings-btn" onClick={() => setIsDrawerOpen(true)}>⚙️ Rules</button>
         </div>
       </header>
@@ -151,6 +155,7 @@ function App() {
         {currentMode === 'raid'           && <WorldBossRaid   key={gameKey} matchConfig={cfg} />}
         {currentMode === 'multiplayer'    && <MultiplayerArena            matchConfig={cfg} setMatchConfig={setMatchConfig} room={initialRoom} />}
         {currentMode === 'adventure'      && <AdventureMap />}
+        {currentMode === 'forge'          && <AvatarCreator onComplete={() => setCurrentMode('classic')} />}
       </main>
     </div>
   );

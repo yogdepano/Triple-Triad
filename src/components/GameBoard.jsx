@@ -5,6 +5,7 @@ import { placeCardOnBoard } from '../engine/BoardLogic';
 import { calculateBestMove } from '../engine/AILogic';
 import { DndContext, useDraggable, useDroppable, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { supabase, getUserAvatar } from '../lib/supabaseClient';
 
 const DraggableCard = ({ card, disabled }) => {
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
@@ -249,7 +250,10 @@ const RewardPhase = ({ result, playerScore, opponentScore, onReset, onRetry = nu
 
 
 
+import { useAvatarHand } from '../hooks/useAvatarHand';
+
 export default function GameBoard({ matchConfig = { basicRules: ['basic'], specialRule: null, infectionRule: null }, onReset, onRetry = null, enemyDeck = null, initialPlayerHand = null, act1Protection = false }) {
+  const { avatarCard, injectAvatar } = useAvatarHand();
   // Derive flat execution list from slots — used by engine and AI
   const activeRules = [...(matchConfig.basicRules || []), matchConfig.specialRule].filter(Boolean);
   const [board, setBoard] = useState(Array(9).fill(null));
@@ -273,7 +277,6 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
     setGameResult(null);
 
     const isRandom = activeRules.includes('random');
-    const shuffle = arr => [...arr].sort(() => 0.5 - Math.random());
     
     if (customPlayerHand && customOpponentHand) {
       setPlayerHand(customPlayerHand);
@@ -283,15 +286,19 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
       const oHand = enemyDeck.map((c, i) => ({ ...c, id: `o_${i}_${Date.now()}`, owner: 'opponent' }));
       let pRaw;
       if (initialPlayerHand && initialPlayerHand.length > 0) {
-        pRaw = initialPlayerHand;
+        pRaw = [...initialPlayerHand];
       } else {
         const pPool = data.playerDeck.filter(c => !c.isAvatar);
         pRaw = (isRandom ? [...pPool].sort(() => 0.5 - Math.random()) : pPool).slice(0, 5);
       }
+
+      // Inject Avatar
+      pRaw = injectAvatar(pRaw);
+
       setPlayerHand(pRaw.map((c, i) => ({ ...c, id: `p_${i}_${Date.now()}`, owner: 'player' })));
       setOpponentHand(oHand);
     } else {
-      // Testing Phase: Generate randomized hands following the requested distribution
+      // Testing Phase
       const generateTestHand = (owner) => [
         Math.random() < 0.2 ? generateCard('BOSS', owner) : generateCard('EPIC', owner),
         generateCard('LEGENDARY', owner),
@@ -300,8 +307,11 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
         generateCard('COMMON', owner)
       ].sort(() => Math.random() - 0.5);
 
-      const pHand = generateTestHand('player');
+      let pHand = generateTestHand('player');
       const oHand = generateTestHand('opponent');
+
+      // Inject Avatar
+      pHand = injectAvatar(pHand);
 
       setPlayerHand(pHand.map((c, i) => ({ ...c, id: `p_${i}_${Date.now()}`, owner: 'player' })));
       setOpponentHand(oHand.map((c, i) => ({ ...c, id: `o_${i}_${Date.now()}`, owner: 'opponent' })));
@@ -313,7 +323,7 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
     const newElements = Array(9).fill(null);
     if (activeRules.includes('elemental')) {
       const elTypes = ['💧', '🔥', '🌿', '🪨', '⚡', '✨', '🌑'];
-      let numToPlace = Math.floor(Math.random() * 3) + 2; // 2-4
+      let numToPlace = Math.floor(Math.random() * 3) + 2; 
       while (numToPlace > 0) {
         const idx = Math.floor(Math.random() * 9);
         if (!newElements[idx]) {
@@ -325,7 +335,10 @@ export default function GameBoard({ matchConfig = { basicRules: ['basic'], speci
     setBoardElements(newElements);
   };
 
-  useEffect(() => { initGame(); }, []);
+  useEffect(() => { 
+    // Wait for avatar to load before initializing the first time
+    initGame(); 
+  }, [avatarCard]);
 
   const checkWin = (b) => {
     if (b.some(c => c === null)) return null;

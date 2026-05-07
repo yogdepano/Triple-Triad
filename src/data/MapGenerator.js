@@ -41,29 +41,29 @@ function typeForRow(row) {
  * between rows still hold visually.
  */
 function randomXPositions(n, rng) {
-  const MARGIN = 0.15; // Increased margin to bring nodes closer to the center
+  const MARGIN = 0.12; 
 
   if (n === 1) {
-    // Single node: Always exactly in the center (bottleneck/boss)
-    return [0.5];
+    // Single node: Randomly centered-ish
+    return [0.4 + rng() * 0.2];
   }
 
-  // Create structured lanes instead of random scattered gaps.
-  const step = (1 - 2 * MARGIN) / (n - 1);
   const positions = [];
+  const MIN_DIST = 0.12; 
 
   for (let i = 0; i < n; i++) {
-    // Base position perfectly aligned to a lane
-    let basePos = MARGIN + (i * step);
-    
-    // Add a small amount of random jitter (-3% to +3%) 
-    // so it looks organic but maintains structure
-    let jitter = (rng() * 0.06) - 0.03;
-    
-    positions.push(basePos + jitter);
+    let attempts = 0;
+    let pos;
+    let tooClose;
+    do {
+      pos = MARGIN + rng() * (1 - 2 * MARGIN);
+      tooClose = positions.some(p => Math.abs(p - pos) < MIN_DIST);
+      attempts++;
+    } while (tooClose && attempts < 20);
+    positions.push(pos);
   }
-
-  return positions;
+  
+  return positions.sort((a, b) => a - b);
 }
 
 /**
@@ -84,7 +84,8 @@ export function generateMap(seed = Date.now()) {
   // is always preserved (row 0 at bottom, row ROWS-1 at top), then rescales
   // interior into (0.08 … 0.92) so there's breathing room at both ends.
   const interior = Array.from({ length: ROWS - 2 }, () => rng()).sort((a, b) => a - b);
-  const rowY = [0, ...interior.map(v => 0.08 + v * 0.84), 1];
+  // Add some spacing jitter
+  const rowY = [0, ...interior.map(v => 0.05 + v * 0.9), 1];
 
   // ── 2. Column counts per row ──────────────────────────────────────────────
   // Start row: 1, 2, or 3 nodes — equal chance so some runs start narrow.
@@ -101,10 +102,10 @@ export function generateMap(seed = Date.now()) {
       continue;
     }
 
-    // Middle rows: 55% → 1 node (bottleneck), 35% → 2, 10% → 3
+    // Middle rows: 40% → 1 node, 40% → 2 nodes, 20% → 3 nodes
     const v = rng();
-    if (v < 0.55)      colCounts.push(1);
-    else if (v < 0.90) colCounts.push(2);
+    if (v < 0.40)      colCounts.push(1);
+    else if (v < 0.80) colCounts.push(2);
     else               colCounts.push(3);
   }
 

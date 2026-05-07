@@ -239,7 +239,10 @@ const RewardPhase = ({ result, playerScore, opponentScore, onReset, board, playe
   );
 };
 
+import { useAvatarHand } from '../hooks/useAvatarHand';
+
 export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], specialRule: null, infectionRule: null }, onReset }) {
+  const { avatarCard, injectAvatar } = useAvatarHand();
   const activeRules = [...(matchConfig.basicRules || []), matchConfig.specialRule].filter(Boolean);
   const [board, setBoard] = useState(Array(25).fill(null));
   const [playerHand, setPlayerHand] = useState([]);
@@ -284,6 +287,9 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
         pRaw.sort(() => 0.5 - Math.random());
       }
 
+      // Inject Avatar
+      pRaw = injectAvatar(pRaw);
+
       const oHand = generateTestHand('opponent');
 
       setPlayerHand(pRaw.map((c, i) => ({ ...c, id: `p_${i}_${Date.now()}`, owner: 'player' })));
@@ -308,7 +314,7 @@ export default function GameBoard5x5({ matchConfig = { basicRules: ['basic'], sp
     setBoardElements(newElements);
   };
 
-  useEffect(() => { initGame(); }, []);
+  useEffect(() => { initGame(); }, [avatarCard]);
 
   const checkWin = (b) => {
     // Game ends when 25 cards are played (one player has 1 card left)

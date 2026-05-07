@@ -1,29 +1,34 @@
 import React, { useState } from 'react';
 import { loadSaveData } from '../data/MockSaveData';
+import { useAvatarHand } from '../hooks/useAvatarHand';
 
 const MIN_CARDS = 5; // must pick exactly 5
 
 export default function DeckPicker({ onConfirm, isRandom = false }) {
+  const { avatarCard } = useAvatarHand();
   const data       = loadSaveData();
   const collection = data.playerDeck || [];
 
   const [selected, setSelected] = useState([]);
 
+  // Pre-select avatar if available
+  React.useEffect(() => {
+    if (avatarCard && !selected.some(s => s.isAvatar)) {
+      setSelected(prev => [...prev, avatarCard]);
+    }
+  }, [avatarCard]);
+
   // If Random rule: auto-pick and immediately call onConfirm
   React.useEffect(() => {
     if (isRandom) {
-      const shuffled = [...collection].sort(() => 0.5 - Math.random());
-      onConfirm(shuffled.slice(0, MIN_CARDS));
+      const pPool = collection.filter(c => !c.isAvatar);
+      const shuffled = pPool.sort(() => 0.5 - Math.random());
+      const hand = shuffled.slice(0, MIN_CARDS - (avatarCard ? 1 : 0));
+      if (avatarCard) hand.unshift(avatarCard);
+      onConfirm(hand);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRandom]);
-
-  if (isRandom) return (
-    <div className="spire-wrapper" style={{ flexDirection: 'column', gap: '16px' }}>
-      <h2 style={{ fontFamily: 'Cinzel', color: 'var(--player-color)' }}>Random Rule Active</h2>
-      <p style={{ fontFamily: 'Cinzel', opacity: 0.6 }}>Auto-selecting your hand…</p>
-    </div>
-  );
+  }, [isRandom, avatarCard]);
 
   const toggle = (card) => {
     const idx = selected.findIndex(s => s.name === card.name);
