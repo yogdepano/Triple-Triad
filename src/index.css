@@ -223,10 +223,16 @@ body {
   justify-content: center;
   height: 100%;
   padding: var(--game-pad);
-  background: url('/assets/game_bg.png') center/cover no-repeat;
+  background: url('/assets/forge_wallpaper.jpg') center/cover no-repeat;
   position: relative;
   overflow: hidden;
 }
+.spire-wrapper::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: rgba(5, 3, 14, 0.45); z-index: 0;
+}
+.spire-wrapper > * { position: relative; z-index: 1; }
+
 
 .game-row {
   display: inline-flex;
@@ -464,9 +470,15 @@ body {
 .raid-wrapper {
   display: flex; align-items: center; justify-content: center; gap: 40px;
   padding: 30px; height: 100vh;
-  background: url('/assets/arena_bg.png') center/cover no-repeat;
+  background: url('/assets/forge_wallpaper.jpg') center/cover no-repeat;
   overflow-y: auto;
+  position: relative;
 }
+.raid-wrapper::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: rgba(5, 3, 14, 0.5); z-index: 0;
+}
+.raid-wrapper > * { position: relative; z-index: 1; }
 .raid-board-container { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
 .board.grid-5x5, .board.grid-7x7 {
@@ -492,9 +504,14 @@ body {
    SNIPER GAMBLE
 ═══════════════════════════════════════════════ */
 .gamble-overlay {
-  position: absolute; inset: 0; z-index: 300; background: rgba(5,3,10,0.95);
+  position: absolute; inset: 0; z-index: 300;
+  background: url('/assets/forge_wallpaper.jpg') center/cover no-repeat;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px;
 }
+.gamble-overlay::before {
+  content: ''; position: absolute; inset: 0; background: rgba(5,3,10,0.75); z-index: 0; pointer-events: none;
+}
+.gamble-overlay > * { position: relative; z-index: 1; }
 .gamble-pool { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
 .gamble-card {
   width: 140px; height: 210px; border: 2px solid #333; border-radius: 8px;
@@ -505,11 +522,11 @@ body {
 /* ═══════════════════════════════════════════════
    ADVENTURE MAP
 ═══════════════════════════════════════════════ */
-.adv-wrapper { display: flex; flex-direction: column; height: 100vh; background: #0b0710; padding-top: var(--header-h); }
-.adv-header  { display: flex; align-items: center; gap: 20px; padding: 10px 24px; background: rgba(18,10,28,0.98); border-bottom: 1px solid rgba(255,255,255,0.1); }
+.adv-wrapper { display: flex; flex-direction: column; height: 100vh; background: url('/assets/forge_wallpaper.jpg') center/cover no-repeat; padding-top: var(--header-h); }
+.adv-header  { display: flex; align-items: center; gap: 20px; padding: 10px 24px; background: rgba(18,10,28,0.92); border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(8px); }
 .adv-map-canvas { 
-  flex: 1; position: relative; overflow: hidden; 
-  background: linear-gradient(to bottom, rgba(5,3,10,0.7) 0%, rgba(15,10,30,0.4) 50%, rgba(5,3,10,0.85) 100%), url('/adventure_bg.jpg') center/cover; 
+  flex: 1; position: relative; overflow: hidden;
+  background: rgba(5, 3, 14, 0.45);
 }
 
 .adv-svg-layer {
@@ -537,7 +554,9 @@ body {
   font-style: italic;
   max-width: 250px;
 }
-.deck-picker-wrapper { display: flex; flex-direction: column; align-items: center; height: 100vh; padding: 40px; background: #0b0710; padding-top: 80px; }
+.deck-picker-wrapper { display: flex; flex-direction: column; align-items: center; height: 100vh; padding: 40px; background: url('/assets/forge_wallpaper.jpg') center/cover no-repeat; padding-top: 80px; position: relative; }
+.deck-picker-wrapper::before { content: ''; position: absolute; inset: 0; background: rgba(5,3,14,0.6); z-index: 0; pointer-events: none; }
+.deck-picker-wrapper > * { position: relative; z-index: 1; }
 .deck-picker-grid    { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 24px; width: 100%; max-width: 1200px; }
 
 .copy-link-btn {
@@ -620,9 +639,23 @@ body {
   justify-content: center;
   min-height: 100vh;
   padding: 60px 40px;
-  background: radial-gradient(circle at center, #1a1428 0%, #0b0710 100%);
+  background: url('/assets/forge_wallpaper.jpg') center/cover no-repeat;
   color: #fff;
   overflow-y: auto;
+  position: relative;
+}
+.creator-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 3, 14, 0.55);
+  backdrop-filter: blur(1px);
+  pointer-events: none;
+  z-index: 0;
+}
+.creator-wrapper > * {
+  position: relative;
+  z-index: 1;
 }
 
 .creator-title {
@@ -648,13 +681,165 @@ body {
   justify-content: center;
 }
 
-.avatar-preview {
-  transform: scale(1.8);
-  box-shadow: 0 0 50px rgba(74, 144, 226, 0.2);
-  border: 4px solid #d4af37 !important; /* Gold frame for avatar */
+/* ═══════════════════════════════════════════════
+   ENGRAVED NETHER — ORNATE AVATAR FRAME CARD
+═══════════════════════════════════════════════ */
+
+/*
+  The frame image (nether_frame.jpg) is portrait, approx 3:4 ratio.
+  We size the shell to a fixed width and let height follow the ratio.
+  Everything inside is positioned relative to this shell.
+*/
+.nether-card-shell {
+  position: relative;
+  width: 280px;
+  /* 3:4.1 ratio to match the frame artwork */
+  aspect-ratio: 280 / 385;
+  user-select: none;
+  filter: drop-shadow(0 0 30px rgba(120, 60, 200, 0.5));
+  transition: filter 0.5s;
 }
 
-/* Layered Card Elements */
+/* 1. PHOTO — full card, z:1 (behind everything) */
+.nether-photo-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background: #0a0014;
+}
+.nether-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.nether-photo-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(15, 0, 30, 0.55) 100%);
+  pointer-events: none;
+}
+
+/* 2. FRAME — real transparent PNG, z:2 on top of photo.
+   No blend modes. The transparent center simply lets the photo show through. */
+.nether-frame-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* 3. STATS — z:3, above frame and photo */
+.nether-stats {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.nether-stats span {
+  position: absolute;
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1;
+  text-align: center;
+  color: #fff;
+  text-shadow:
+    0 0 8px rgba(180, 80, 255, 0.9),
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000;
+  transform: translate(-50%, -50%);
+}
+/*
+  Stat positions re-measured from the uploaded frame image.
+  Frame aspect ratio ~681x906px.
+  Diamond gem centers:
+  - TOP:    x=50%, y=11%   (the large top-center diamond)
+  - LEFT:   x=8%,  y=44%  (mid-left side diamond)
+  - RIGHT:  x=92%, y=44%  (mid-right side diamond)
+  - BOTTOM: x=50%, y=76%  (bottom center diamond, above nameplate)
+*/
+.ns-top    { top: 11%; left: 50%; }
+.ns-left   { top: 49%;   left: 9.5%; }
+.ns-right  { top: 49%;   left: 90.5%; }
+.ns-bottom { top: 76%; left: 50%; }
+
+/* Power stat highlight */
+.ns-power {
+  color: #ffde59 !important;
+  text-shadow:
+    0 0 14px rgba(255, 220, 80, 1),
+    0 0 4px rgba(255,220,80,0.8),
+    1px 1px 0 #000 !important;
+  font-size: 1.8rem !important;
+}
+
+/* Rolling animation */
+.ns-rolling {
+  animation: ns-roll 0.08s infinite;
+  color: #a78bfa;
+  opacity: 0.85;
+}
+@keyframes ns-roll {
+  0%   { transform: translate(-50%, -55%) scale(1.1); filter: blur(1px); }
+  50%  { transform: translate(-50%, -45%) scale(0.95); filter: blur(2px); }
+  100% { transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+}
+
+/* 4. Element icon — top-left, z:4 */
+.nether-element {
+  position: absolute;
+  top: 3%;
+  left: 6%;
+  z-index: 4;
+  font-size: 1.3rem;
+  filter: drop-shadow(0 0 6px rgba(0,0,0,0.9));
+}
+
+/* 5. Nameplate text — z:4, centered in the parchment strip */
+.nether-nameplate {
+  position: absolute;
+  top: 87.5%;
+  height: 8%;
+  left: 10%;
+  right: 10%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2a1200;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sparkle overlay — z:5 when finalized */
+.card-sparkle-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 5;
+}
+
+/* Finalized glow */
+.card-finalized-nether {
+  filter: drop-shadow(0 0 20px rgba(160, 80, 255, 0.9))
+          drop-shadow(0 0 40px rgba(212, 175, 55, 0.5));
+  transition: filter 0.5s;
+}
+
+/* Legacy card-image-underlay kept for GameBoard cards */
 .card-image-underlay {
   position: absolute;
   inset: 0;
@@ -674,21 +859,6 @@ body {
   background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.4) 100%);
   border: 1px solid rgba(255,255,255,0.1);
   pointer-events: none;
-}
-
-.avatar-preview .element-icon {
-  position: absolute;
-  top: 6%;
-  left: 6%;
-  font-size: 1.2rem;
-  z-index: 10;
-  filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));
-}
-
-.avatar-preview .stats .power {
-  color: #ffde59;
-  text-shadow: 0 0 10px rgba(255, 222, 89, 0.8), 2px 2px 0 #000;
-  font-size: 18cqw;
 }
 
 .creator-controls {
