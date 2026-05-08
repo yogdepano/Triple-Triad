@@ -70,8 +70,9 @@ body {
   background: var(--bg-dark);
   color: #fff;
   font-family: 'Cinzel', serif;
-  overflow: hidden;
-  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ═══════════════════════════════════════════════
@@ -222,7 +223,7 @@ body {
   justify-content: center;
   height: 100%;
   padding: var(--game-pad);
-  background: url('/assets/arena_bg.png') center/cover no-repeat;
+  background: url('/assets/game_bg.png') center/cover no-repeat;
   position: relative;
   overflow: hidden;
 }
