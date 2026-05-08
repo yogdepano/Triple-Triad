@@ -44,7 +44,10 @@ function RuleDropdown({ id, value, label, exclude = [], onChange, disabled = fal
   );
 }
 
+import LandingPage from './components/LandingPage'
+
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [currentMode, setCurrentMode] = useState('classic');
   const [gameKey,     setGameKey]     = useState(0);
   const [initialRoom, setInitialRoom] = useState(null);
@@ -119,6 +122,10 @@ function App() {
       </div>
     </>
   );
+
+  if (showLanding) {
+    return <LandingPage onEnter={() => setShowLanding(false)} />;
+  }
 
   return (
     <div className="app-shell">
